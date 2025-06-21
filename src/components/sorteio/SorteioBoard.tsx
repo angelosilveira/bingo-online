@@ -86,17 +86,17 @@ const SorteioBoard = ({ numerosSorteados, onSortear, disabled = false }: Sorteio
           <CardTitle className="text-center">Tabuleiro de Números</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-5 gap-4">
+          <div className="grid grid-cols-5 gap-2">
             {Object.entries(bingoColumns).map(([letter, numbers]) => (
               <div key={letter} className="text-center">
-                <div className="font-bold text-2xl mb-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white py-2 rounded">
+                <div className="font-bold text-3xl mb-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 rounded h-16 flex items-center justify-center">
                   {letter}
                 </div>
                 <div className="space-y-1">
                   {numbers.map(numero => (
                     <div
                       key={numero}
-                      className={`w-10 h-10 flex items-center justify-center text-sm font-semibold rounded ${
+                      className={`h-12 flex items-center justify-center text-lg font-semibold rounded ${
                         numerosSorteados.includes(numero)
                           ? 'bg-green-500 text-white'
                           : 'bg-gray-200 text-gray-700'

@@ -8,17 +8,27 @@ import SorteioBoard from "@/components/sorteio/SorteioBoard";
 const Conferencia = () => {
   const [bingoAtivo, setBingoAtivo] = useState(true);
   const [numerosSorteados, setNumerosSorteados] = useState<number[]>([]);
+  
+  // Dados mockados para o ranking - simulando cartelas próximas de ganhar
   const [ranking, setRanking] = useState([
-    { cartela: 1, jogador: "João Silva", acertos: 12 },
-    { cartela: 15, jogador: "Maria Santos", acertos: 11 },
-    { cartela: 8, jogador: "Pedro Oliveira", acertos: 10 },
-    { cartela: 23, jogador: "Ana Costa", acertos: 9 },
-    { cartela: 42, jogador: "Carlos Lima", acertos: 8 }
+    { cartela: 1, jogador: "João Silva", acertos: 12, posicao: 1 },
+    { cartela: 15, jogador: "Maria Santos", acertos: 11, posicao: 2 },
+    { cartela: 8, jogador: "Pedro Oliveira", acertos: 10, posicao: 3 },
+    { cartela: 23, jogador: "Ana Costa", acertos: 9, posicao: 4 },
+    { cartela: 42, jogador: "Carlos Lima", acertos: 8, posicao: 5 }
   ]);
 
   const handleSortearNumero = (numero: number) => {
     setNumerosSorteados(prev => [...prev, numero]);
-    // Aqui integraria com Firebase/Supabase para sincronização em tempo real
+    // Simular atualização do ranking após cada sorteio
+    setRanking(prev => prev.map(item => ({
+      ...item,
+      acertos: item.acertos + (Math.random() > 0.7 ? 1 : 0) // Simula chance de acerto
+    })).sort((a, b) => b.acertos - a.acertos).map((item, index) => ({
+      ...item,
+      posicao: index + 1
+    })));
+    
     console.log("Número sorteado:", numero);
   };
 
@@ -29,6 +39,14 @@ const Conferencia = () => {
 
   const handleFinalizarBingo = () => {
     setBingoAtivo(false);
+  };
+
+  const getLetraDoNumero = (numero: number): string => {
+    if (numero <= 15) return 'B';
+    if (numero <= 30) return 'I';
+    if (numero <= 45) return 'N';
+    if (numero <= 60) return 'G';
+    return 'O';
   };
 
   return (
@@ -97,18 +115,21 @@ const Conferencia = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {ranking.map((item, index) => (
+                  {ranking.slice(0, 5).map((item, index) => (
                     <div
                       key={item.cartela}
                       className={`flex items-center justify-between p-3 rounded-lg ${
-                        index === 0 ? 'bg-yellow-100' : 'bg-gray-50'
+                        index === 0 ? 'bg-yellow-100 border-2 border-yellow-300' : 'bg-gray-50'
                       }`}
                     >
                       <div className="flex items-center space-x-3">
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                          index === 0 ? 'bg-yellow-500 text-white' : 'bg-gray-300 text-gray-700'
+                          index === 0 ? 'bg-yellow-500 text-white' : 
+                          index === 1 ? 'bg-gray-400 text-white' :
+                          index === 2 ? 'bg-orange-500 text-white' :
+                          'bg-gray-300 text-gray-700'
                         }`}>
-                          {index + 1}
+                          {item.posicao}°
                         </div>
                         <div>
                           <div className="font-semibold text-sm">
@@ -116,6 +137,9 @@ const Conferencia = () => {
                           </div>
                           <div className="text-xs text-gray-600">
                             {item.jogador}
+                          </div>
+                          <div className="text-xs text-blue-600">
+                            {ranking.filter(r => r.acertos > item.acertos).length} cartelas na frente
                           </div>
                         </div>
                       </div>
@@ -134,24 +158,51 @@ const Conferencia = () => {
             {/* Histórico de Números */}
             <Card>
               <CardHeader>
-                <CardTitle>Últimos Números</CardTitle>
+                <CardTitle>Últimos Números Sorteados</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-5 gap-1">
-                  {numerosSorteados.slice(-10).reverse().map((numero, index) => (
-                    <div
-                      key={index}
-                      className="bg-blue-100 text-blue-800 rounded p-2 text-center text-sm font-semibold"
-                    >
-                      {numero}
-                    </div>
-                  ))}
+                <div className="space-y-2">
+                  {numerosSorteados.length > 0 ? (
+                    <>
+                      {/* Últimos 10 números em grade */}
+                      <div className="grid grid-cols-5 gap-2">
+                        {numerosSorteados.slice(-10).reverse().map((numero, index) => (
+                          <div
+                            key={`${numero}-${index}`}
+                            className={`rounded p-2 text-center text-sm font-semibold ${
+                              index === 0 ? 'bg-yellow-200 text-yellow-800 border-2 border-yellow-400' : 
+                              'bg-blue-100 text-blue-800'
+                            }`}
+                          >
+                            <div className="text-xs">{getLetraDoNumero(numero)}</div>
+                            <div className="font-bold">{numero}</div>
+                          </div>
+                        ))}
+                      </div>
+                      
+                      {/* Lista completa dos números sorteados */}
+                      {numerosSorteados.length > 10 && (
+                        <div className="mt-4 pt-4 border-t">
+                          <div className="text-xs text-gray-600 mb-2">Todos os números ({numerosSorteados.length}):</div>
+                          <div className="flex flex-wrap gap-1">
+                            {numerosSorteados.map((numero, index) => (
+                              <span
+                                key={`all-${numero}-${index}`}
+                                className="bg-gray-200 text-gray-700 px-2 py-1 rounded text-xs"
+                              >
+                                {getLetraDoNumero(numero)}-{numero}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <p className="text-gray-500 text-center py-4">
+                      Nenhum número sorteado ainda
+                    </p>
+                  )}
                 </div>
-                {numerosSorteados.length === 0 && (
-                  <p className="text-gray-500 text-center py-4">
-                    Nenhum número sorteado ainda
-                  </p>
-                )}
               </CardContent>
             </Card>
           </div>
