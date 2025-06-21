@@ -47,18 +47,21 @@ export type Database = {
           bingo_id: string | null
           created_at: string | null
           id: string
+          numero: number | null
           numeros: number[]
         }
         Insert: {
           bingo_id?: string | null
           created_at?: string | null
           id?: string
+          numero?: number | null
           numeros: number[]
         }
         Update: {
           bingo_id?: string | null
           created_at?: string | null
           id?: string
+          numero?: number | null
           numeros?: number[]
         }
         Relationships: [
@@ -206,6 +209,27 @@ export type Database = {
           },
         ]
       }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       users: {
         Row: {
           id: string
@@ -232,7 +256,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_cartela_numero: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
     }
     Enums: {
       role_type: "admin" | "proprietario" | "usuario"

@@ -1,8 +1,6 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 
 interface CartelaGridProps {
   numeroCartela: number;
@@ -13,6 +11,10 @@ interface CartelaGridProps {
 
 const CartelaGrid = ({ numeroCartela, numeros, onChange, readOnly = false }: CartelaGridProps) => {
   const [selectedNumbers, setSelectedNumbers] = useState<number[]>(numeros);
+
+  useEffect(() => {
+    setSelectedNumbers(numeros);
+  }, [numeros]);
 
   const bingoColumns = {
     B: Array.from({ length: 15 }, (_, i) => i + 1),
@@ -29,8 +31,8 @@ const CartelaGrid = ({ numeroCartela, numeros, onChange, readOnly = false }: Car
     if (selectedNumbers.includes(numero)) {
       newNumbers = selectedNumbers.filter(n => n !== numero);
     } else {
-      if (selectedNumbers.length >= 15) {
-        alert("Você pode selecionar no máximo 15 números por cartela");
+      if (selectedNumbers.length >= 25) {
+        alert("Você pode selecionar no máximo 25 números por cartela");
         return;
       }
       newNumbers = [...selectedNumbers, numero].sort((a, b) => a - b);
@@ -53,16 +55,16 @@ const CartelaGrid = ({ numeroCartela, numeros, onChange, readOnly = false }: Car
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-5 gap-2 mb-4">
-          {Object.entries(bingoColumns).map(([letter, numbers]) => (
+          {Object.entries(bingoColumns).map(([letter]) => (
             <div key={letter} className="text-center">
-              <div className="font-bold text-lg mb-2 bg-purple-600 text-white py-1 rounded">
+              <div className="font-bold text-3xl mb-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 rounded h-16 flex items-center justify-center">
                 {letter}
               </div>
               <div className="space-y-1">
                 {getColumnNumbers(letter as keyof typeof bingoColumns).map(numero => (
                   <div
                     key={numero}
-                    className="w-8 h-8 flex items-center justify-center text-xs bg-blue-100 rounded cursor-pointer"
+                    className="h-12 flex items-center justify-center text-lg font-semibold rounded bg-blue-100"
                   >
                     {numero}
                   </div>
@@ -74,24 +76,33 @@ const CartelaGrid = ({ numeroCartela, numeros, onChange, readOnly = false }: Car
 
         {!readOnly && (
           <div>
-            <h4 className="font-semibold mb-2">Selecionar números (máx. 15):</h4>
-            <div className="grid grid-cols-15 gap-1 text-xs">
-              {Array.from({ length: 75 }, (_, i) => i + 1).map(numero => (
-                <button
-                  key={numero}
-                  onClick={() => handleNumberClick(numero)}
-                  className={`w-6 h-6 rounded text-xs ${
-                    selectedNumbers.includes(numero)
-                      ? 'bg-green-500 text-white'
-                      : 'bg-gray-200 hover:bg-gray-300'
-                  }`}
-                >
-                  {numero}
-                </button>
+            <h4 className="font-semibold mb-2">Selecionar números (máx. 25):</h4>
+            <div className="grid grid-cols-5 gap-2">
+              {Object.entries(bingoColumns).map(([letter, numbers]) => (
+                <div key={letter} className="text-center">
+                  <div className="font-bold text-lg mb-2 bg-purple-600 text-white py-1 rounded">
+                    {letter}
+                  </div>
+                  <div className="space-y-1">
+                    {numbers.map(numero => (
+                      <button
+                        key={numero}
+                        onClick={() => handleNumberClick(numero)}
+                        className={`h-12 w-full rounded text-lg font-semibold ${
+                          selectedNumbers.includes(numero)
+                            ? 'bg-green-500 text-white'
+                            : 'bg-gray-200 hover:bg-gray-300'
+                        }`}
+                      >
+                        {numero}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               ))}
             </div>
-            <p className="text-sm text-gray-600 mt-2">
-              Selecionados: {selectedNumbers.length}/15
+            <p className="text-sm text-gray-600 mt-2 text-center">
+              Selecionados: {selectedNumbers.length}/25
             </p>
           </div>
         )}

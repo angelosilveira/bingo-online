@@ -1,79 +1,140 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Layout from "@/components/layout/Layout";
 import CartelaGrid from "@/components/cartela/CartelaGrid";
 import { Plus, Search, Edit, Trash2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/components/ui/use-toast";
 
 const Cartelas = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editingCartela, setEditingCartela] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
   const [novaCartela, setNovaCartela] = useState({
-    numero: "",
     numeros: [] as number[]
   });
 
-  // Mock data - substituir por dados do Supabase
-  const [cartelas, setCartelas] = useState([
-    {
-      id: "1",
-      numero: 1,
-      numeros: [1, 5, 12, 18, 23, 31, 45, 52, 63, 67, 2, 8, 15, 29, 44]
-    },
-    {
-      id: "2", 
-      numero: 2,
-      numeros: [3, 7, 14, 22, 28, 33, 41, 56, 61, 72, 4, 9, 16, 25, 47]
+  const [cartelas, setCartelas] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetchCartelas();
+  }, []);
+
+  const fetchCartelas = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('cartelas')
+        .select('*')
+        .order('numero', { ascending: true });
+
+      if (error) throw error;
+      setCartelas(data || []);
+    } catch (error) {
+      console.error('Erro ao buscar cartelas:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao carregar as cartelas",
+        variant: "destructive",
+      });
     }
-  ]);
+  };
 
   const filteredCartelas = cartelas.filter(cartela =>
-    cartela.numero.toString().includes(searchTerm)
+    cartela.numero?.toString().includes(searchTerm)
   );
 
-  const handleSaveCartela = () => {
-    if (novaCartela.numeros.length !== 15) {
-      alert("A cartela deve ter exatamente 15 números!");
+  const handleSaveCartela = async () => {
+    if (novaCartela.numeros.length !== 25) {
+      alert("A cartela deve ter exatamente 25 números!");
       return;
     }
 
-    if (editingCartela) {
-      // Editar cartela existente
-      setCartelas(prev => prev.map(c => 
-        c.id === editingCartela.id 
-          ? { ...c, numero: parseInt(novaCartela.numero), numeros: novaCartela.numeros }
-          : c
-      ));
-    } else {
-      // Criar nova cartela
-      const newCartela = {
-        id: Date.now().toString(),
-        numero: parseInt(novaCartela.numero),
-        numeros: novaCartela.numeros
-      };
-      setCartelas(prev => [...prev, newCartela]);
-    }
+    setLoading(true);
+    try {
+      if (editingCartela) {
+        // Editar cartela existente
+        const { error } = await supabase
+          .from('cartelas')
+          .update({ numeros: novaCartela.numeros })
+          .eq('id', editingCartela.id);
 
-    setShowForm(false);
-    setEditingCartela(null);
-    setNovaCartela({ numero: "", numeros: [] });
+        if (error) throw error;
+        
+        toast({
+          title: "Sucesso",
+          description: "Cartela atualizada com sucesso!",
+        });
+      } else {
+        // Criar nova cartela
+        const { data, error } = await supabase.rpc('generate_cartela_numero');
+        if (error) throw error;
+
+        const { error: insertError } = await supabase
+          .from('cartelas')
+          .insert({
+            numero: data,
+            numeros: novaCartela.numeros
+          });
+
+        if (insertError) throw insertError;
+        
+        toast({
+          title: "Sucesso",
+          description: "Cartela criada com sucesso!",
+        });
+      }
+
+      setShowForm(false);
+      setEditingCartela(null);
+      setNovaCartela({ numeros: [] });
+      fetchCartelas();
+    } catch (error) {
+      console.error('Erro ao salvar cartela:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao salvar a cartela",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleEditCartela = (cartela: any) => {
     setEditingCartela(cartela);
     setNovaCartela({
-      numero: cartela.numero.toString(),
       numeros: cartela.numeros
     });
     setShowForm(true);
   };
 
-  const handleDeleteCartela = (id: string) => {
+  const handleDeleteCartela = async (id: string) => {
     if (confirm("Tem certeza que deseja excluir esta cartela?")) {
-      setCartelas(prev => prev.filter(c => c.id !== id));
+      try {
+        const { error } = await supabase
+          .from('cartelas')
+          .delete()
+          .eq('id', id);
+
+        if (error) throw error;
+        
+        toast({
+          title: "Sucesso",
+          description: "Cartela excluída com sucesso!",
+        });
+        fetchCartelas();
+      } catch (error) {
+        console.error('Erro ao excluir cartela:', error);
+        toast({
+          title: "Erro",
+          description: "Erro ao excluir a cartela",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -104,35 +165,22 @@ const Cartelas = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Número da Cartela
-                </label>
-                <Input
-                  type="number"
-                  value={novaCartela.numero}
-                  onChange={(e) => setNovaCartela(prev => ({ ...prev, numero: e.target.value }))}
-                  placeholder="Ex: 1"
-                  className="max-w-xs"
-                />
-              </div>
-              
               <CartelaGrid
-                numeroCartela={parseInt(novaCartela.numero) || 0}
+                numeroCartela={editingCartela ? editingCartela.numero : cartelas.length + 1}
                 numeros={novaCartela.numeros}
                 onChange={(numeros) => setNovaCartela(prev => ({ ...prev, numeros }))}
               />
               
               <div className="flex gap-2">
-                <Button onClick={handleSaveCartela}>
-                  {editingCartela ? "Atualizar" : "Salvar"} Cartela
+                <Button onClick={handleSaveCartela} disabled={loading}>
+                  {loading ? "Salvando..." : editingCartela ? "Atualizar" : "Salvar"} Cartela
                 </Button>
                 <Button 
                   variant="outline" 
                   onClick={() => {
                     setShowForm(false);
                     setEditingCartela(null);
-                    setNovaCartela({ numero: "", numeros: [] });
+                    setNovaCartela({ numeros: [] });
                   }}
                 >
                   Cancelar
