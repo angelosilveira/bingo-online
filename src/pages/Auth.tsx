@@ -6,10 +6,14 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
+import { UserService } from "@/services/userService";
+import { AuthService } from "@/services/authService";
+import { sessionService } from "@/services/sessionService";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
@@ -34,55 +38,48 @@ const Auth = () => {
 
     try {
       if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-
-        if (error) {
+        // Login local usando AuthService
+        const user = await AuthService.login(username, password);
+        if (!user) {
           toast({
             title: "Erro no login",
-            description: error.message,
+            description: "Usuário ou senha inválidos.",
             variant: "destructive",
           });
         } else {
+          sessionService.setUser(user);
           toast({
             title: "Login realizado com sucesso!",
-            description: "Bem-vindo ao Sistema de Bingo",
+            description: `Bem-vindo, ${user.name}`,
           });
           navigate("/");
         }
       } else {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/`,
-            data: {
-              name: name,
-            },
-          },
-        });
-
-        if (error) {
+        // Verifica se username já existe
+        const exists = await UserService.checkUsernameExists(username);
+        if (exists) {
           toast({
-            title: "Erro no cadastro",
-            description: error.message,
+            title: "Erro",
+            description: "Nome de usuário já existe",
             variant: "destructive",
           });
-        } else {
-          toast({
-            title: "Cadastro realizado com sucesso!",
-            description: "Verifique seu email para confirmar a conta",
-          });
+          setLoading(false);
+          return;
         }
+        // Cria usuário na tabela users
+        await UserService.createUser({
+          name,
+          username,
+          phone,
+          role: "usuario",
+          password,
+        });
+        toast({
+          title: "Cadastro realizado!",
+          description: "Você já pode fazer login.",
+        });
+        setIsLogin(true);
       }
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Ocorreu um erro inesperado",
-        variant: "destructive",
-      });
     } finally {
       setLoading(false);
     }
@@ -100,49 +97,55 @@ const Auth = () => {
           </p>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleAuth} className="space-y-4">
+          <form onSubmit={handleAuth}>
             {!isLogin && (
-              <div>
-                <Label htmlFor="name">Nome</Label>
+              <>
+                <Label htmlFor="name" className="mb-1">
+                  Nome completo
+                </Label>
                 <Input
                   id="name"
-                  type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  required={!isLogin}
-                  placeholder="Seu nome completo"
+                  required
+                  className="mb-4"
                 />
-              </div>
+                <Label htmlFor="phone" className="mb-1">
+                  Telefone
+                </Label>
+                <Input
+                  id="phone"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  required
+                  className="mb-4"
+                />
+              </>
             )}
-
-            <div>
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                placeholder="seu@email.com"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="password">Senha</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                placeholder="Sua senha"
-                minLength={6}
-              />
-            </div>
-
+            <Label htmlFor="username" className="mb-1">
+              Nome de usuário
+            </Label>
+            <Input
+              id="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+              className="mb-4"
+            />
+            <Label htmlFor="password" className="mb-1">
+              Senha
+            </Label>
+            <Input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="mb-6"
+            />
             <Button
               type="submit"
-              className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+              className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 mb-2"
               disabled={loading}
             >
               {loading ? "Processando..." : isLogin ? "Entrar" : "Cadastrar"}

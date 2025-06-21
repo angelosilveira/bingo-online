@@ -13,7 +13,7 @@ import Cartelas from "./pages/Cartelas";
 import Conferencia from "./pages/Conferencia";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
-import Usuarios from "./pages/Users/Index"; // Importação ajustada
+import Usuarios from "./pages/Users";
 
 const queryClient = new QueryClient();
 

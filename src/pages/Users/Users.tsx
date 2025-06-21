@@ -1,12 +1,6 @@
 import React, { useEffect, useState } from "react";
-import {
-  listUsers,
-  createUser,
-  updateUser,
-  deleteUser,
-  User,
-} from "@/integrations/supabase/users";
-import { supabase } from "@/integrations/supabase/client";
+import { UserService } from "@/services/userService";
+import { User, CreateUserData, UpdateUserData } from "@/models/User";
 import {
   Table,
   TableBody,
@@ -24,7 +18,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import UserForm from "@/components/user/UserForm";
+import UserForm from "./UserForm";
 import { useToast } from "@/components/ui/use-toast";
 import {
   AlertDialog,
@@ -38,7 +32,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-const Usuarios = () => {
+const Users = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -47,9 +41,16 @@ const Usuarios = () => {
 
   const fetchUsers = async () => {
     setLoading(true);
-    const usersList = await listUsers();
-    if (usersList) {
+    try {
+      const usersList = await UserService.listUsers();
       setUsers(usersList);
+    } catch (error) {
+      console.error("Erro ao buscar usuários:", error);
+      toast({
+        title: "Erro ao carregar usuários",
+        description: "Ocorreu um erro ao carregar a lista de usuários.",
+        variant: "destructive",
+      });
     }
     setLoading(false);
   };
@@ -58,88 +59,49 @@ const Usuarios = () => {
     fetchUsers();
   }, []);
 
-  const handleCreateUser = async (userData: {
-    name: string;
-    phone: string;
-    email: string;
-    password: string;
-    role: User["role"];
-  }) => {
-    // 1. Criar usuário na autenticação do Supabase
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email: userData.email,
-      password: userData.password,
-    });
-
-    if (authError) {
-      console.error("Erro ao criar usuário (Auth):", authError);
-      toast({
-        title: "Erro ao criar usuário",
-        description: authError.message,
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (authData?.user) {
-      // 2. Inserir dados adicionais na tabela 'users'
-      const newUser = {
-        id: authData.user.id, // Usar o ID do usuário da autenticação
-        name: userData.name,
-        phone: userData.phone,
-        role: userData.role,
-      };
-
-      const createdUser = await createUser(newUser);
-
+  const handleCreateUser = async (userData: CreateUserData) => {
+    try {
+      const createdUser = await UserService.createUser(userData);
       if (createdUser) {
         toast({
           title: "Sucesso!",
           description: "Usuário criado com sucesso.",
         });
-        setIsModalOpen(false); // Fechar modal
-        fetchUsers(); // Atualizar lista
-      } else {
-        // Se a criação na tabela users falhar, considerar reverter a criação na auth (opcional, mais complexo)
-        toast({
-          title: "Erro ao criar usuário",
-          description:
-            "Usuário criado na autenticação, mas falha ao salvar dados adicionais.",
-          variant: "destructive",
-        });
+        setIsModalOpen(false);
+        fetchUsers();
       }
+    } catch (error) {
+      console.error("Erro ao criar usuário:", error);
+      toast({
+        title: "Erro ao criar usuário",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Ocorreu um erro ao criar o usuário.",
+        variant: "destructive",
+      });
     }
   };
 
-  const handleEditUser = (user: User) => {
-    setEditingUser(user);
-    setIsModalOpen(true);
-  };
-
-  const handleUpdateUser = async (userData: {
-    name: string;
-    phone: string;
-    email: string;
-    password: string;
-    role: User["role"];
-  }) => {
+  const handleUpdateUser = async (userData: UpdateUserData) => {
     if (!editingUser) return;
 
-    const updatedUser = await updateUser(editingUser.id, {
-      name: userData.name,
-      phone: userData.phone,
-      role: userData.role,
-    });
-
-    if (updatedUser) {
-      toast({
-        title: "Sucesso!",
-        description: "Usuário atualizado com sucesso.",
-      });
-      setIsModalOpen(false);
-      setEditingUser(null);
-      fetchUsers();
-    } else {
+    try {
+      const updatedUser = await UserService.updateUser(
+        editingUser.id,
+        userData
+      );
+      if (updatedUser) {
+        toast({
+          title: "Sucesso!",
+          description: "Usuário atualizado com sucesso.",
+        });
+        setIsModalOpen(false);
+        setEditingUser(null);
+        fetchUsers();
+      }
+    } catch (error) {
+      console.error("Erro ao atualizar usuário:", error);
       toast({
         title: "Erro ao atualizar usuário",
         description: "Ocorreu um erro ao atualizar o usuário.",
@@ -149,21 +111,26 @@ const Usuarios = () => {
   };
 
   const handleDeleteUser = async (userId: string) => {
-    const success = await deleteUser(userId);
-
-    if (success) {
+    try {
+      await UserService.deleteUser(userId);
       toast({
         title: "Sucesso!",
         description: "Usuário excluído com sucesso.",
       });
-      fetchUsers(); // Atualizar lista
-    } else {
+      fetchUsers();
+    } catch (error) {
+      console.error("Erro ao excluir usuário:", error);
       toast({
         title: "Erro ao excluir usuário",
         description: "Ocorreu um erro ao excluir o usuário.",
         variant: "destructive",
       });
     }
+  };
+
+  const handleEditUser = (user: User) => {
+    setEditingUser(user);
+    setIsModalOpen(true);
   };
 
   return (
@@ -175,7 +142,7 @@ const Usuarios = () => {
         onOpenChange={(open) => {
           setIsModalOpen(open);
           if (!open) {
-            setEditingUser(null); // Limpar usuário em edição ao fechar o modal
+            setEditingUser(null);
           }
         }}
       >
@@ -208,19 +175,20 @@ const Usuarios = () => {
           <TableHeader>
             <TableRow>
               <TableHead>Nome</TableHead>
+              <TableHead>Nome de Usuário</TableHead>
               <TableHead>Telefone</TableHead>
               <TableHead>Nível</TableHead>
+              <TableHead>Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {users.map((user) => (
               <TableRow key={user.id}>
                 <TableCell>{user.name}</TableCell>
+                <TableCell>{user.username}</TableCell>
                 <TableCell>{user.phone}</TableCell>
                 <TableCell>{user.role}</TableCell>
                 <TableCell className="flex gap-2">
-                  {" "}
-                  {/* Adicionado flex e gap para os botões */}
                   <Button
                     variant="outline"
                     size="sm"
@@ -236,10 +204,10 @@ const Usuarios = () => {
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>
-                        <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
+                        <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
                         <AlertDialogDescription>
-                          Esta ação não pode ser desfeita. Isso excluirá
-                          permanentemente o usuário.
+                          Tem certeza que deseja excluir este usuário? Esta ação
+                          não pode ser desfeita.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
@@ -247,7 +215,7 @@ const Usuarios = () => {
                         <AlertDialogAction
                           onClick={() => handleDeleteUser(user.id)}
                         >
-                          Excluir
+                          Confirmar
                         </AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
@@ -262,4 +230,4 @@ const Usuarios = () => {
   );
 };
 
-export default Usuarios;
+export default Users;
