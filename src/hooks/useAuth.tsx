@@ -1,48 +1,43 @@
-
-import { useState, useEffect, createContext, useContext, ReactNode } from "react";
-import { User, Session } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
+import {
+  useState,
+  useEffect,
+  createContext,
+  useContext,
+  ReactNode,
+} from "react";
+import { User } from "@/models/User";
+import { sessionService } from "@/services/sessionService";
 
 interface AuthContextType {
-  user: User | null;
-  session: Session | null;
+  user: Omit<User, "password"> | null;
   loading: boolean;
-  signOut: () => Promise<void>;
+  signOut: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<Omit<User, "password"> | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Configurar listener de mudanças de autenticação
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
-      }
-    );
-
-    // Verificar sessão existente
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
+    const updateUser = () => {
+      const storedUser = sessionService.getUser();
+      setUser(storedUser);
+    };
+    updateUser();
+    setLoading(false);
+    window.addEventListener("storage", updateUser);
+    return () => window.removeEventListener("storage", updateUser);
   }, []);
 
-  const signOut = async () => {
-    await supabase.auth.signOut();
+  const signOut = () => {
+    sessionService.clear();
+    setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signOut }}>
+    <AuthContext.Provider value={{ user, loading, signOut }}>
       {children}
     </AuthContext.Provider>
   );
