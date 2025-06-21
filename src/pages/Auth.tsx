@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,7 +18,9 @@ const Auth = () => {
   useEffect(() => {
     // Verificar se o usuário já está logado
     const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (session) {
         navigate("/");
       }
@@ -113,7 +114,7 @@ const Auth = () => {
                 />
               </div>
             )}
-            
+
             <div>
               <Label htmlFor="email">Email</Label>
               <Input
@@ -125,7 +126,7 @@ const Auth = () => {
                 placeholder="seu@email.com"
               />
             </div>
-            
+
             <div>
               <Label htmlFor="password">Senha</Label>
               <Input
@@ -138,7 +139,7 @@ const Auth = () => {
                 minLength={6}
               />
             </div>
-            
+
             <Button
               type="submit"
               className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
@@ -147,16 +148,6 @@ const Auth = () => {
               {loading ? "Processando..." : isLogin ? "Entrar" : "Cadastrar"}
             </Button>
           </form>
-          
-          <div className="mt-4 text-center">
-            <button
-              type="button"
-              onClick={() => setIsLogin(!isLogin)}
-              className="text-purple-600 hover:text-purple-700 text-sm"
-            >
-              {isLogin ? "Não tem conta? Cadastre-se" : "Já tem conta? Faça login"}
-            </button>
-          </div>
         </CardContent>
       </Card>
     </div>

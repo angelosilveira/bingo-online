@@ -1,4 +1,3 @@
-
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import BingoForm from "@/components/bingo/BingoForm";
@@ -11,17 +10,17 @@ const NovoBingo = () => {
   const handleSubmit = (data: any) => {
     // Aqui integraria com Supabase
     console.log("Dados do novo bingo:", data);
-    
+
     toast({
       title: "Bingo criado com sucesso!",
       description: "Seu evento foi cadastrado e está pronto para configuração.",
     });
-    
+
     navigate("/bingos");
   };
 
   return (
-    <Layout>
+    <>
       <div className="max-w-4xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Criar Novo Bingo</h1>
@@ -29,10 +28,10 @@ const NovoBingo = () => {
             Preencha os dados do seu evento de bingo
           </p>
         </div>
-        
+
         <BingoForm onSubmit={handleSubmit} />
       </div>
-    </Layout>
+    </>
   );
 };
 

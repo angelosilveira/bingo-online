@@ -1,5 +1,12 @@
-
-import { Home, Target, CreditCard, Trophy, Settings, LogOut } from "lucide-react";
+import {
+  Home,
+  Target,
+  CreditCard,
+  Trophy,
+  Settings,
+  LogOut,
+  Users,
+} from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Sidebar,
@@ -36,6 +43,11 @@ const menuItems = [
     url: "/conferencia",
     icon: Trophy,
   },
+  {
+    title: "Usuários",
+    url: "/usuarios",
+    icon: Users,
+  },
 ];
 
 export function AppSidebar() {
@@ -57,7 +69,7 @@ export function AppSidebar() {
           </div>
         </div>
       </SidebarHeader>
-      
+
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Menu Principal</SidebarGroupLabel>
@@ -65,7 +77,7 @@ export function AppSidebar() {
             <SidebarMenu>
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton 
+                  <SidebarMenuButton
                     asChild
                     isActive={location.pathname === item.url}
                   >

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -21,7 +20,7 @@ const Bingos = () => {
       data: "2024-01-15",
       horario: "19:00",
       quantidade_cartelas: 100,
-      status: "agendado"
+      status: "agendado",
     },
     {
       id: "2",
@@ -31,7 +30,7 @@ const Bingos = () => {
       data: "2024-01-20",
       horario: "15:00",
       quantidade_cartelas: 50,
-      status: "ativo"
+      status: "ativo",
     },
     {
       id: "3",
@@ -41,13 +40,14 @@ const Bingos = () => {
       data: "2023-12-30",
       horario: "20:00",
       quantidade_cartelas: 200,
-      status: "finalizado"
-    }
+      status: "finalizado",
+    },
   ]);
 
-  const filteredBingos = bingos.filter(bingo =>
-    bingo.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    bingo.local.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredBingos = bingos.filter(
+    (bingo) =>
+      bingo.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      bingo.local.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleEdit = (id: string) => {
@@ -59,7 +59,7 @@ const Bingos = () => {
   };
 
   return (
-    <Layout>
+    <>
       <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <div>
@@ -92,9 +92,13 @@ const Bingos = () => {
         {filteredBingos.length === 0 ? (
           <div className="text-center py-12">
             <div className="text-6xl mb-4">🎯</div>
-            <h3 className="text-xl font-semibold mb-2">Nenhum bingo encontrado</h3>
+            <h3 className="text-xl font-semibold mb-2">
+              Nenhum bingo encontrado
+            </h3>
             <p className="text-gray-600 mb-4">
-              {searchTerm ? "Tente ajustar sua pesquisa" : "Comece criando seu primeiro evento"}
+              {searchTerm
+                ? "Tente ajustar sua pesquisa"
+                : "Comece criando seu primeiro evento"}
             </p>
             <Button
               onClick={() => navigate("/bingos/novo")}
@@ -117,7 +121,7 @@ const Bingos = () => {
           </div>
         )}
       </div>
-    </Layout>
+    </>
   );
 };
 

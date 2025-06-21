@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,7 +14,7 @@ const Cartelas = () => {
   const [editingCartela, setEditingCartela] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [novaCartela, setNovaCartela] = useState({
-    numeros: [] as number[]
+    numeros: [] as number[],
   });
 
   const [cartelas, setCartelas] = useState<any[]>([]);
@@ -27,14 +26,14 @@ const Cartelas = () => {
   const fetchCartelas = async () => {
     try {
       const { data, error } = await supabase
-        .from('cartelas')
-        .select('*')
-        .order('numero', { ascending: true });
+        .from("cartelas")
+        .select("*")
+        .order("numero", { ascending: true });
 
       if (error) throw error;
       setCartelas(data || []);
     } catch (error) {
-      console.error('Erro ao buscar cartelas:', error);
+      console.error("Erro ao buscar cartelas:", error);
       toast({
         title: "Erro",
         description: "Erro ao carregar as cartelas",
@@ -43,7 +42,7 @@ const Cartelas = () => {
     }
   };
 
-  const filteredCartelas = cartelas.filter(cartela =>
+  const filteredCartelas = cartelas.filter((cartela) =>
     cartela.numero?.toString().includes(searchTerm)
   );
 
@@ -58,30 +57,28 @@ const Cartelas = () => {
       if (editingCartela) {
         // Editar cartela existente
         const { error } = await supabase
-          .from('cartelas')
+          .from("cartelas")
           .update({ numeros: novaCartela.numeros })
-          .eq('id', editingCartela.id);
+          .eq("id", editingCartela.id);
 
         if (error) throw error;
-        
+
         toast({
           title: "Sucesso",
           description: "Cartela atualizada com sucesso!",
         });
       } else {
         // Criar nova cartela
-        const { data, error } = await supabase.rpc('generate_cartela_numero');
+        const { data, error } = await supabase.rpc("generate_cartela_numero");
         if (error) throw error;
 
-        const { error: insertError } = await supabase
-          .from('cartelas')
-          .insert({
-            numero: data,
-            numeros: novaCartela.numeros
-          });
+        const { error: insertError } = await supabase.from("cartelas").insert({
+          numero: data,
+          numeros: novaCartela.numeros,
+        });
 
         if (insertError) throw insertError;
-        
+
         toast({
           title: "Sucesso",
           description: "Cartela criada com sucesso!",
@@ -93,7 +90,7 @@ const Cartelas = () => {
       setNovaCartela({ numeros: [] });
       fetchCartelas();
     } catch (error) {
-      console.error('Erro ao salvar cartela:', error);
+      console.error("Erro ao salvar cartela:", error);
       toast({
         title: "Erro",
         description: "Erro ao salvar a cartela",
@@ -107,7 +104,7 @@ const Cartelas = () => {
   const handleEditCartela = (cartela: any) => {
     setEditingCartela(cartela);
     setNovaCartela({
-      numeros: cartela.numeros
+      numeros: cartela.numeros,
     });
     setShowForm(true);
   };
@@ -115,20 +112,17 @@ const Cartelas = () => {
   const handleDeleteCartela = async (id: string) => {
     if (confirm("Tem certeza que deseja excluir esta cartela?")) {
       try {
-        const { error } = await supabase
-          .from('cartelas')
-          .delete()
-          .eq('id', id);
+        const { error } = await supabase.from("cartelas").delete().eq("id", id);
 
         if (error) throw error;
-        
+
         toast({
           title: "Sucesso",
           description: "Cartela excluída com sucesso!",
         });
         fetchCartelas();
       } catch (error) {
-        console.error('Erro ao excluir cartela:', error);
+        console.error("Erro ao excluir cartela:", error);
         toast({
           title: "Erro",
           description: "Erro ao excluir a cartela",
@@ -139,7 +133,7 @@ const Cartelas = () => {
   };
 
   return (
-    <Layout>
+    <>
       <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <div>
@@ -166,17 +160,26 @@ const Cartelas = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <CartelaGrid
-                numeroCartela={editingCartela ? editingCartela.numero : cartelas.length + 1}
+                numeroCartela={
+                  editingCartela ? editingCartela.numero : cartelas.length + 1
+                }
                 numeros={novaCartela.numeros}
-                onChange={(numeros) => setNovaCartela(prev => ({ ...prev, numeros }))}
+                onChange={(numeros) =>
+                  setNovaCartela((prev) => ({ ...prev, numeros }))
+                }
               />
-              
+
               <div className="flex gap-2">
                 <Button onClick={handleSaveCartela} disabled={loading}>
-                  {loading ? "Salvando..." : editingCartela ? "Atualizar" : "Salvar"} Cartela
+                  {loading
+                    ? "Salvando..."
+                    : editingCartela
+                    ? "Atualizar"
+                    : "Salvar"}{" "}
+                  Cartela
                 </Button>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={() => {
                     setShowForm(false);
                     setEditingCartela(null);
@@ -205,9 +208,13 @@ const Cartelas = () => {
         {filteredCartelas.length === 0 ? (
           <div className="text-center py-12">
             <div className="text-6xl mb-4">🎫</div>
-            <h3 className="text-xl font-semibold mb-2">Nenhuma cartela encontrada</h3>
+            <h3 className="text-xl font-semibold mb-2">
+              Nenhuma cartela encontrada
+            </h3>
             <p className="text-gray-600 mb-4">
-              {searchTerm ? "Tente ajustar sua pesquisa" : "Comece criando sua primeira cartela"}
+              {searchTerm
+                ? "Tente ajustar sua pesquisa"
+                : "Comece criando sua primeira cartela"}
             </p>
             <Button
               onClick={() => setShowForm(true)}
@@ -220,7 +227,10 @@ const Cartelas = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredCartelas.map((cartela) => (
-              <Card key={cartela.id} className="hover:shadow-lg transition-shadow">
+              <Card
+                key={cartela.id}
+                className="hover:shadow-lg transition-shadow"
+              >
                 <CardHeader className="flex flex-row items-center justify-between">
                   <CardTitle>Cartela #{cartela.numero}</CardTitle>
                   <div className="flex gap-2">
@@ -253,7 +263,7 @@ const Cartelas = () => {
           </div>
         )}
       </div>
-    </Layout>
+    </>
   );
 };
 
