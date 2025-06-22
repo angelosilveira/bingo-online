@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -9,7 +8,12 @@ interface CartelaGridProps {
   readOnly?: boolean;
 }
 
-const CartelaGrid = ({ numeroCartela, numeros, onChange, readOnly = false }: CartelaGridProps) => {
+const CartelaGrid = ({
+  numeroCartela,
+  numeros,
+  onChange,
+  readOnly = false,
+}: CartelaGridProps) => {
   const [selectedNumbers, setSelectedNumbers] = useState<number[]>(numeros);
 
   useEffect(() => {
@@ -21,37 +25,54 @@ const CartelaGrid = ({ numeroCartela, numeros, onChange, readOnly = false }: Car
     I: Array.from({ length: 15 }, (_, i) => i + 16),
     N: Array.from({ length: 15 }, (_, i) => i + 31),
     G: Array.from({ length: 15 }, (_, i) => i + 46),
-    O: Array.from({ length: 15 }, (_, i) => i + 61)
+    O: Array.from({ length: 15 }, (_, i) => i + 61),
   };
 
   const handleNumberClick = (numero: number) => {
     if (readOnly) return;
 
+    // Descobre a letra da coluna do número
+    let letter: keyof typeof bingoColumns | undefined;
+    for (const [l, nums] of Object.entries(bingoColumns)) {
+      if (nums.includes(numero)) {
+        letter = l as keyof typeof bingoColumns;
+        break;
+      }
+    }
+    if (!letter) return;
+
+    // Conta quantos já estão selecionados para essa letra
+    const selectedInColumn = selectedNumbers.filter((n) =>
+      bingoColumns[letter!].includes(n)
+    ).length;
+
     let newNumbers;
     if (selectedNumbers.includes(numero)) {
-      newNumbers = selectedNumbers.filter(n => n !== numero);
+      newNumbers = selectedNumbers.filter((n) => n !== numero);
     } else {
+      if (selectedInColumn >= 5) {
+        alert(`Você só pode selecionar até 5 números para a letra ${letter}`);
+        return;
+      }
       if (selectedNumbers.length >= 25) {
         alert("Você pode selecionar no máximo 25 números por cartela");
         return;
       }
       newNumbers = [...selectedNumbers, numero].sort((a, b) => a - b);
     }
-    
+
     setSelectedNumbers(newNumbers);
     onChange(newNumbers);
   };
 
   const getColumnNumbers = (letter: keyof typeof bingoColumns) => {
-    return bingoColumns[letter].filter(num => selectedNumbers.includes(num));
+    return bingoColumns[letter].filter((num) => selectedNumbers.includes(num));
   };
 
   return (
     <Card className="w-full max-w-md mx-auto">
       <CardHeader>
-        <CardTitle className="text-center">
-          Cartela #{numeroCartela}
-        </CardTitle>
+        <CardTitle className="text-center">Cartela #{numeroCartela}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-5 gap-2 mb-4">
@@ -61,14 +82,16 @@ const CartelaGrid = ({ numeroCartela, numeros, onChange, readOnly = false }: Car
                 {letter}
               </div>
               <div className="space-y-1">
-                {getColumnNumbers(letter as keyof typeof bingoColumns).map(numero => (
-                  <div
-                    key={numero}
-                    className="h-12 flex items-center justify-center text-lg font-semibold rounded bg-blue-100"
-                  >
-                    {numero}
-                  </div>
-                ))}
+                {getColumnNumbers(letter as keyof typeof bingoColumns).map(
+                  (numero) => (
+                    <div
+                      key={numero}
+                      className="h-12 flex items-center justify-center text-lg font-semibold rounded bg-blue-100"
+                    >
+                      {numero}
+                    </div>
+                  )
+                )}
               </div>
             </div>
           ))}
@@ -76,7 +99,9 @@ const CartelaGrid = ({ numeroCartela, numeros, onChange, readOnly = false }: Car
 
         {!readOnly && (
           <div>
-            <h4 className="font-semibold mb-2">Selecionar números (máx. 25):</h4>
+            <h4 className="font-semibold mb-2">
+              Selecionar números (máx. 25):
+            </h4>
             <div className="grid grid-cols-5 gap-2">
               {Object.entries(bingoColumns).map(([letter, numbers]) => (
                 <div key={letter} className="text-center">
@@ -84,14 +109,14 @@ const CartelaGrid = ({ numeroCartela, numeros, onChange, readOnly = false }: Car
                     {letter}
                   </div>
                   <div className="space-y-1">
-                    {numbers.map(numero => (
+                    {numbers.map((numero) => (
                       <button
                         key={numero}
                         onClick={() => handleNumberClick(numero)}
                         className={`h-12 w-full rounded text-lg font-semibold ${
                           selectedNumbers.includes(numero)
-                            ? 'bg-green-500 text-white'
-                            : 'bg-gray-200 hover:bg-gray-300'
+                            ? "bg-green-500 text-white"
+                            : "bg-gray-200 hover:bg-gray-300"
                         }`}
                       >
                         {numero}
