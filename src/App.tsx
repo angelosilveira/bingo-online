@@ -14,6 +14,7 @@ import Conferencia from "./pages/Conferencia";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import Usuarios from "./pages/Users";
+import PublicConferencia from "./pages/PublicConferencia"; // Importar a nova página
 
 const queryClient = new QueryClient();
 
@@ -76,8 +77,12 @@ const App = () => (
                   </ProtectedRoute>
                 }
               />
-            </Route>{" "}
-            {/* Fechar o elemento Layout */}
+            </Route>
+            {/* Rota pública FORA do Layout para não ter sidebar nem header */}
+            <Route
+              path="/public/bingo/:bingoId"
+              element={<PublicConferencia />}
+            />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

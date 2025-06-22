@@ -89,14 +89,16 @@ const SorteioBoard = ({
             </div>
           )}
 
-          <Button
-            onClick={sortearNumero}
-            disabled={disabled || numerosDisponiveis.length === 0}
-            className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-8 py-3 text-lg"
-            size="lg"
-          >
-            🎯 Sortear Número
-          </Button>
+          {typeof onSortear === "function" && !disabled && (
+            <Button
+              onClick={sortearNumero}
+              disabled={disabled || numerosDisponiveis.length === 0}
+              className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-8 py-3 text-lg"
+              size="lg"
+            >
+              🎯 Sortear Número
+            </Button>
+          )}
         </CardContent>
       </Card>
 
