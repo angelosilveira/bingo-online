@@ -1,11 +1,18 @@
-
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { UserService } from "@/services/userService";
+import { CartelaService } from "@/services/cartelaService";
 
 interface BingoFormProps {
   onSubmit: (data: any) => void;
@@ -24,24 +31,48 @@ const BingoForm = ({ onSubmit, initialData }: BingoFormProps) => {
     data: initialData?.data || "",
     horario: initialData?.horario || "",
     quantidade_cartelas: initialData?.quantidade_cartelas || "",
-    observacoes: initialData?.observacoes || ""
+    observacoes: initialData?.observacoes || "",
   });
+
+  const [responsaveis, setResponsaveis] = useState<
+    { id: string; name: string }[]
+  >([]);
+  const [totalCartelas, setTotalCartelas] = useState<number>(0);
+  const [cartelasError, setCartelasError] = useState<string>("");
+
+  useEffect(() => {
+    // Buscar usuários com role proprietario ou user
+    UserService.listUsers().then((users) => {
+      setResponsaveis(
+        users
+          .filter((u) => u.role === "proprietario")
+          .map((u) => ({ id: u.id, name: u.name }))
+      );
+    });
+    // Buscar total de cartelas cadastradas
+    CartelaService.getTotalCartelas().then(setTotalCartelas);
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setCartelasError("");
+    if (Number(formData.quantidade_cartelas) > totalCartelas) {
+      setCartelasError(
+        `A quantidade de cartelas não pode ser maior que o total cadastrado (${totalCartelas}).`
+      );
+      return;
+    }
     onSubmit(formData);
   };
 
   const handleChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   return (
     <Card className="max-w-2xl mx-auto">
       <CardHeader>
-        <CardTitle>
-          {initialData ? "Editar Bingo" : "Novo Bingo"}
-        </CardTitle>
+        <CardTitle>{initialData ? "Editar Bingo" : "Novo Bingo"}</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -56,8 +87,31 @@ const BingoForm = ({ onSubmit, initialData }: BingoFormProps) => {
           </div>
 
           <div>
+            <Label htmlFor="responsavel">Nome do Responsável</Label>
+            <Select
+              onValueChange={(value) => handleChange("responsavel_id", value)}
+              value={formData.responsavel_id || ""}
+              required
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione o responsável" />
+              </SelectTrigger>
+              <SelectContent>
+                {responsaveis.map((user) => (
+                  <SelectItem key={user.id} value={user.id}>
+                    {user.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
             <Label htmlFor="tipo">Tipo de Bingo</Label>
-            <Select onValueChange={(value) => handleChange("tipo", value)} value={formData.tipo}>
+            <Select
+              onValueChange={(value) => handleChange("tipo", value)}
+              value={formData.tipo}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Selecione o tipo" />
               </SelectTrigger>
@@ -80,7 +134,9 @@ const BingoForm = ({ onSubmit, initialData }: BingoFormProps) => {
                 required
               />
             </div>
-            {(formData.tipo === "2-premios" || formData.tipo === "3-premios" || formData.tipo === "4-premios") && (
+            {(formData.tipo === "2-premios" ||
+              formData.tipo === "3-premios" ||
+              formData.tipo === "4-premios") && (
               <div>
                 <Label htmlFor="premio2">2º Prêmio</Label>
                 <Input
@@ -90,7 +146,8 @@ const BingoForm = ({ onSubmit, initialData }: BingoFormProps) => {
                 />
               </div>
             )}
-            {(formData.tipo === "3-premios" || formData.tipo === "4-premios") && (
+            {(formData.tipo === "3-premios" ||
+              formData.tipo === "4-premios") && (
               <div>
                 <Label htmlFor="premio3">3º Prêmio</Label>
                 <Input
@@ -152,9 +209,18 @@ const BingoForm = ({ onSubmit, initialData }: BingoFormProps) => {
               type="number"
               min="1"
               value={formData.quantidade_cartelas}
-              onChange={(e) => handleChange("quantidade_cartelas", e.target.value)}
+              onChange={(e) =>
+                handleChange("quantidade_cartelas", e.target.value)
+              }
               required
             />
+            <div className="text-xs text-gray-500 mt-1">
+              Cartelas cadastradas no sistema:{" "}
+              <span className="font-bold">{totalCartelas}</span>
+            </div>
+            {cartelasError && (
+              <div className="text-xs text-red-500 mt-1">{cartelasError}</div>
+            )}
           </div>
 
           <div>

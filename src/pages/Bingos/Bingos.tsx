@@ -1,53 +1,37 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Layout from "@/components/layout/Layout";
 import BingoCard from "@/components/bingo/BingoCard";
 import { Search, Plus } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const Bingos = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
+  const [bingos, setBingos] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Dados mockados - substituir por dados do Supabase
-  const [bingos] = useState([
-    {
-      id: "1",
-      nome: "Bingo Beneficente da Igreja",
-      tipo: "4-premios",
-      local: "Salão Paroquial",
-      data: "2024-01-15",
-      horario: "19:00",
-      quantidade_cartelas: 100,
-      status: "agendado",
-    },
-    {
-      id: "2",
-      nome: "Bingo do Clube de Mães",
-      tipo: "2-premios",
-      local: "Centro Comunitário",
-      data: "2024-01-20",
-      horario: "15:00",
-      quantidade_cartelas: 50,
-      status: "ativo",
-    },
-    {
-      id: "3",
-      nome: "Super Bingo de Final de Ano",
-      tipo: "4-premios",
-      local: "Ginásio Municipal",
-      data: "2023-12-30",
-      horario: "20:00",
-      quantidade_cartelas: 200,
-      status: "finalizado",
-    },
-  ]);
+  useEffect(() => {
+    const fetchBingos = async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("bingos")
+        .select(
+          "id, name, tipo, local, date, time, quantity_of_cartelas, status, responsavel_id"
+        )
+        .order("date", { ascending: false });
+      if (data) setBingos(data);
+      setLoading(false);
+    };
+    fetchBingos();
+  }, []);
 
   const filteredBingos = bingos.filter(
     (bingo) =>
-      bingo.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      bingo.local.toLowerCase().includes(searchTerm.toLowerCase())
+      bingo.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      bingo.local?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleEdit = (id: string) => {
@@ -89,7 +73,9 @@ const Bingos = () => {
           </div>
         </div>
 
-        {filteredBingos.length === 0 ? (
+        {loading ? (
+          <div className="text-center py-12">Carregando...</div>
+        ) : filteredBingos.length === 0 ? (
           <div className="text-center py-12">
             <div className="text-6xl mb-4">🎯</div>
             <h3 className="text-xl font-semibold mb-2">

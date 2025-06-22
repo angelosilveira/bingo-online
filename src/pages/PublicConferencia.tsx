@@ -1,11 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import SorteioBoard from "@/components/sorteio/SorteioBoard";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-// @ts-ignore
-import { io } from "socket.io-client";
-
-const SOCKET_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
 
 const PublicConferencia = () => {
   const { bingoId } = useParams();
@@ -14,33 +11,54 @@ const PublicConferencia = () => {
   const [bingoNome, setBingoNome] = useState<string>("");
 
   useEffect(() => {
-    // Conecta ao socket.io
-    const socket = io(SOCKET_URL, { query: { bingoId } });
-
-    socket.on("connect", () => {
-      // Solicita o estado inicial do bingo
-      socket.emit("join-bingo", bingoId);
-    });
-
-    socket.on(
-      "bingo-state",
-      (data: {
-        numerosSorteados: number[];
-        quantidadeCartelas: number;
-        nome: string;
-      }) => {
-        setNumerosSorteados(data.numerosSorteados);
-        setQuantidadeCartelas(data.quantidadeCartelas);
+    if (!bingoId) return;
+    // Busca inicial dos dados do bingo
+    const fetchBingo = async () => {
+      const { data, error } = await supabase
+        .from("bingos")
+        .select("nome, quantidade_cartelas")
+        .eq("id", bingoId)
+        .single();
+      if (data) {
         setBingoNome(data.nome);
+        setQuantidadeCartelas(data.quantidade_cartelas);
       }
-    );
+    };
+    fetchBingo();
 
-    socket.on("numero-sorteado", (numero: number) => {
-      setNumerosSorteados((prev) => [...prev, numero]);
-    });
+    // Busca inicial dos números sorteados
+    const fetchNumeros = async () => {
+      const { data, error } = await supabase
+        .from("numeros_sorteados")
+        .select("numero")
+        .eq("bingo_id", bingoId)
+        .order("created_at", { ascending: true });
+      if (data) {
+        setNumerosSorteados(data.map((item: any) => item.numero));
+      }
+    };
+    fetchNumeros();
+
+    // Inscreve para atualizações em tempo real na tabela numeros_sorteados
+    const channel = supabase
+      .channel("public:numeros_sorteados")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "numeros_sorteados",
+          filter: `bingo_id=eq.${bingoId}`,
+        },
+        (payload) => {
+          const newNumero = (payload.new as any).numero;
+          setNumerosSorteados((prev) => [...prev, newNumero]);
+        }
+      )
+      .subscribe();
 
     return () => {
-      socket.disconnect();
+      supabase.removeChannel(channel);
     };
   }, [bingoId]);
 

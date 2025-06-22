@@ -15,6 +15,7 @@ import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import Usuarios from "./pages/Users";
 import PublicConferencia from "./pages/PublicConferencia"; // Importar a nova página
+import BingoGestao from "./pages/Bingos/BingoGestao";
 
 const queryClient = new QueryClient();
 
@@ -74,6 +75,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <Usuarios />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/bingos/gestao/:id"
+                element={
+                  <ProtectedRoute>
+                    <BingoGestao />
                   </ProtectedRoute>
                 }
               />

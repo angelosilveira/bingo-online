@@ -35,6 +35,12 @@ const menuItems = [
     icon: Target,
   },
   {
+    title: "Gestão de Bingos",
+    url: "/bingos/gestao",
+    icon: Settings,
+    adminOnly: true,
+  },
+  {
     title: "Cartelas",
     url: "/cartelas",
     icon: CreditCard,
@@ -60,7 +66,7 @@ export function AppSidebar() {
   const filteredMenuItems =
     user?.role === "proprietario"
       ? menuItems.filter((item) => item.title === "Conferência")
-      : menuItems;
+      : menuItems.filter((item) => !item.adminOnly || user?.role === "admin");
 
   return (
     <Sidebar>

@@ -2,20 +2,38 @@ import { useNavigate } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import BingoForm from "@/components/bingo/BingoForm";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const NovoBingo = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleSubmit = (data: any) => {
-    // Aqui integraria com Supabase
-    console.log("Dados do novo bingo:", data);
+  const handleSubmit = async (data: any) => {
+    // Insere o bingo no Supabase
+    const { error } = await supabase.from("bingos").insert({
+      name: data.nome,
+      tipo: data.tipo,
+      local: data.local,
+      date: data.data,
+      time: data.horario,
+      quantity_of_cartelas: Number(data.quantidade_cartelas),
+      status: "agendado",
+      responsavel_id: data.responsavel_id,
+    });
+
+    if (error) {
+      toast({
+        title: "Erro ao criar bingo",
+        description: error.message,
+        variant: "destructive",
+      });
+      return;
+    }
 
     toast({
       title: "Bingo criado com sucesso!",
       description: "Seu evento foi cadastrado e está pronto para configuração.",
     });
-
     navigate("/bingos");
   };
 
