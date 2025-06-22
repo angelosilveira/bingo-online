@@ -53,6 +53,9 @@ const Conferencia = () => {
     return "O";
   };
 
+  // Substitua pelo valor real do bingo ativo se necessário
+  const quantidadeCartelas = 100;
+
   return (
     <div className="max-w-6xl mx-auto">
       <div className="mb-8">
@@ -71,6 +74,7 @@ const Conferencia = () => {
             numerosSorteados={numerosSorteados}
             onSortear={handleSortearNumero}
             disabled={!bingoAtivo}
+            quantidadeCartelas={quantidadeCartelas}
           />
         </div>
 
