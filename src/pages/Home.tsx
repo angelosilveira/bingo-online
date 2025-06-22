@@ -1,4 +1,5 @@
-import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { useNavigate, Navigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Layout from "@/components/layout/Layout";
@@ -6,6 +7,10 @@ import { Target, CreditCard, Trophy, Plus, BarChart3 } from "lucide-react";
 
 const Home = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  if (user?.role === "proprietario") {
+    return <Navigate to="/conferencia" replace />;
+  }
 
   const stats = [
     {

@@ -21,6 +21,7 @@ import {
   SidebarHeader,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
 
 const menuItems = [
   {
@@ -53,6 +54,13 @@ const menuItems = [
 export function AppSidebar() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, signOut } = useAuth();
+
+  // Se for proprietario, só mostra Conferência
+  const filteredMenuItems =
+    user?.role === "proprietario"
+      ? menuItems.filter((item) => item.title === "Conferência")
+      : menuItems;
 
   return (
     <Sidebar>
@@ -75,7 +83,7 @@ export function AppSidebar() {
           <SidebarGroupLabel>Menu Principal</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {menuItems.map((item) => (
+              {filteredMenuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     asChild
@@ -95,31 +103,41 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <SidebarGroup>
-          <SidebarGroupLabel>Ações Rápidas</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <button
-                    onClick={() => navigate("/bingos/novo")}
-                    className="w-full flex items-center gap-2"
-                  >
-                    <Settings size={16} />
-                    <span>Novo Bingo</span>
-                  </button>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {/* Só mostra ações rápidas se não for proprietario */}
+        {user?.role !== "proprietario" && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Ações Rápidas</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <button
+                      onClick={() => navigate("/bingos/novo")}
+                      className="w-full flex items-center gap-2"
+                    >
+                      <Settings size={16} />
+                      <span>Novo Bingo</span>
+                    </button>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
 
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
-              <Button variant="ghost" className="w-full justify-start">
+              <Button
+                variant="ghost"
+                className="w-full justify-start"
+                onClick={() => {
+                  signOut();
+                  navigate("/auth");
+                }}
+              >
                 <LogOut size={16} />
                 <span>Sair</span>
               </Button>

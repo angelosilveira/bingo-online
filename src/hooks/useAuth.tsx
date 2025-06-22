@@ -12,6 +12,7 @@ interface AuthContextType {
   user: Omit<User, "password"> | null;
   loading: boolean;
   signOut: () => void;
+  login: (user: Omit<User, "password">) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -21,14 +22,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const updateUser = () => {
-      const storedUser = sessionService.getUser();
-      setUser(storedUser);
-    };
-    updateUser();
+    // Carrega o usuário do localStorage apenas uma vez na montagem
+    const storedUser = sessionService.getUser();
+    setUser(storedUser);
     setLoading(false);
-    window.addEventListener("storage", updateUser);
-    return () => window.removeEventListener("storage", updateUser);
   }, []);
 
   const signOut = () => {
@@ -36,8 +33,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(null);
   };
 
+  const login = (user: Omit<User, "password">) => {
+    sessionService.setUser(user);
+    setUser(user);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, signOut }}>
+    <AuthContext.Provider value={{ user, loading, signOut, login }}>
       {children}
     </AuthContext.Provider>
   );

@@ -9,6 +9,7 @@ import { toast } from "@/components/ui/use-toast";
 import { UserService } from "@/services/userService";
 import { AuthService } from "@/services/authService";
 import { sessionService } from "@/services/sessionService";
+import { useAuth } from "@/hooks/useAuth";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -18,18 +19,18 @@ const Auth = () => {
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { login: loginContext } = useAuth();
 
   useEffect(() => {
-    // Verificar se o usuário já está logado
-    const checkUser = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (session) {
-        navigate("/");
+    // Verificar se o usuário já está logado via sessionService
+    const user = sessionService.getUser();
+    if (user) {
+      if (user.role === "proprietario") {
+        navigate("/conferencia", { replace: true });
+      } else {
+        navigate("/", { replace: true });
       }
-    };
-    checkUser();
+    }
   }, [navigate]);
 
   const handleAuth = async (e: React.FormEvent) => {
@@ -47,12 +48,17 @@ const Auth = () => {
             variant: "destructive",
           });
         } else {
-          sessionService.setUser(user);
+          loginContext(user); // Atualiza o contexto imediatamente!
+          console.log("[Auth] Usuário logado:", user);
           toast({
             title: "Login realizado com sucesso!",
             description: `Bem-vindo, ${user.name}`,
           });
-          navigate("/");
+          if (user.role === "proprietario") {
+            navigate("/conferencia", { replace: true });
+          } else {
+            navigate("/", { replace: true });
+          }
         }
       } else {
         // Verifica se username já existe
