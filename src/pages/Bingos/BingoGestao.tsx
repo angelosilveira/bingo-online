@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
@@ -12,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import BingoGestaoSidebar from "@/components/bingo/BingoGestaoSidebar";
+import BingoConferencia from "@/components/bingo/BingoConferencia";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Phone, Mail, DollarSign, Ticket, Users } from "lucide-react";
@@ -203,44 +203,18 @@ const BingoGestao: React.FC = () => {
 
             {/* Conferência Tab */}
             <TabsContent value="conferencia" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Tabela de Conferência</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Sequência</TableHead>
-                        <TableHead>Letra</TableHead>
-                        <TableHead>Número</TableHead>
-                        <TableHead>Data/Hora Sorteio</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {conferencia.map((item, index) => (
-                        <TableRow key={item.id}>
-                          <TableCell>{index + 1}º</TableCell>
-                          <TableCell>
-                            <Badge variant="outline">
-                              {getLetraDoNumero(item.numero)}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="font-bold">{item.numero}</TableCell>
-                          <TableCell>
-                            {new Date(item.created_at).toLocaleString()}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                  {conferencia.length === 0 && (
-                    <div className="text-center py-8 text-gray-500">
-                      Nenhum número foi sorteado ainda
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+              <div className="mb-8">
+                <h2 className="text-2xl font-bold text-gray-900">
+                  Conferência do Bingo
+                </h2>
+                <p className="text-gray-600 mt-2">
+                  Controle o sorteio e acompanhe o ranking em tempo real
+                </p>
+              </div>
+              <BingoConferencia 
+                bingoId={id!} 
+                quantidadeCartelas={bingo.quantity_of_cartelas} 
+              />
             </TabsContent>
 
             {/* Compradores Tab */}
