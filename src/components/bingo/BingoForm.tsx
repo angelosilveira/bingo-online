@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -32,6 +33,7 @@ const BingoForm = ({ onSubmit, initialData }: BingoFormProps) => {
     horario: initialData?.horario || "",
     quantidade_cartelas: initialData?.quantidade_cartelas || "",
     observacoes: initialData?.observacoes || "",
+    responsavel_id: initialData?.responsavel_id || "",
   });
 
   const [responsaveis, setResponsaveis] = useState<

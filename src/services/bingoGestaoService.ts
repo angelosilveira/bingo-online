@@ -1,3 +1,4 @@
+
 import { Bingo, ConferenciaItem, Comprador } from "../models/BingoGestao";
 import { supabase } from "../integrations/supabase/client";
 
@@ -9,8 +10,13 @@ export async function getBingoById(id: string): Promise<Bingo> {
     .single();
   if (error) throw error;
   return {
-    ...data,
+    id: data.id,
+    name: data.name,
+    responsavel_id: data.responsavel_id,
     responsavel_nome: data.users?.name || "",
+    date: data.date,
+    quantity_of_cartelas: data.quantity_of_cartelas,
+    status: data.status,
   };
 }
 
