@@ -79,7 +79,15 @@ const App = () => (
                 }
               />
               <Route
-                path="/bingos/gestao/:id"
+                path="/bingo/:id"
+                element={
+                  <ProtectedRoute>
+                    <BingoGestao />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/bingo/:id"
                 element={
                   <ProtectedRoute>
                     <BingoGestao />

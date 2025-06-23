@@ -4,13 +4,13 @@ import { supabase } from "../integrations/supabase/client";
 export async function getBingoById(id: string): Promise<Bingo> {
   const { data, error } = await supabase
     .from("bingos")
-    .select("*, users:responsavel_id(id, nome)")
+    .select("*, users:responsavel_id(id, name)")
     .eq("id", id)
     .single();
   if (error) throw error;
   return {
     ...data,
-    responsavel_nome: data.users?.nome || "",
+    responsavel_nome: data.users?.name || "",
   };
 }
 
@@ -31,7 +31,7 @@ export async function getCompradoresByBingoId(
 ): Promise<Comprador[]> {
   const { data, error } = await supabase
     .from("cartelas")
-    .select("user_id, users: user_id (nome, email), id")
+    .select("user_id, users: user_id (name), id")
     .eq("bingo_id", bingoId);
   if (error) throw error;
   // Agrupa por comprador e conta cartelas
@@ -41,8 +41,8 @@ export async function getCompradoresByBingoId(
     if (!compradoresMap[uid]) {
       compradoresMap[uid] = {
         id: uid,
-        nome: cartela.users?.nome || "",
-        email: cartela.users?.email || "",
+        nome: cartela.users?.name || "",
+        email: "",
         qtd_cartelas: 0,
       };
     }

@@ -89,7 +89,7 @@ const BingoCard = ({ bingo, onEdit, onView }: BingoCardProps) => {
         </div>
         <div className="flex gap-2 mt-4">
           <Button
-            onClick={() => onView(`/bingos/gestao/${bingo.id}`)}
+            onClick={() => onView(`/bingo/${bingo.id}`)}
             className="flex-1"
           >
             Visualizar

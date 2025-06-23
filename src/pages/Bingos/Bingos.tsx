@@ -39,7 +39,12 @@ const Bingos = () => {
   };
 
   const handleView = (id: string) => {
-    navigate(`/bingos/${id}`);
+    // Se já vier com /bingo no início, não duplica
+    if (id.startsWith("/bingo")) {
+      navigate(id);
+    } else {
+      navigate(`/bingo/${id}`);
+    }
   };
 
   return (
