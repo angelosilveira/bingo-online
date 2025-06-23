@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
@@ -64,6 +65,130 @@ const BingoGestao: React.FC = () => {
     return "O";
   };
 
+  // Dashboard content component
+  const DashboardContent = () => (
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total de Cartelas</CardTitle>
+            <Ticket className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{bingo.quantity_of_cartelas}</div>
+            <p className="text-xs text-muted-foreground">
+              Cadastradas no sistema
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Cartelas Vendidas</CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">{cartelasVendidas}</div>
+            <p className="text-xs text-muted-foreground">
+              {percentualVendido.toFixed(1)}% do total
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Restam Vender</CardTitle>
+            <Ticket className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-orange-600">{cartelasRestantes}</div>
+            <p className="text-xs text-muted-foreground">
+              {(100 - percentualVendido).toFixed(1)}% disponíveis
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Compradores</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{compradores.length}</div>
+            <p className="text-xs text-muted-foreground">
+              Pessoas participando
+            </p>
+            <Button 
+              size="sm" 
+              className="mt-2 w-full"
+              onClick={() => navigate('/compradores')}
+            >
+              Ver Compradores
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Status do Bingo</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <span>Status:</span>
+              <Badge variant={bingo.status === 'ativo' ? 'default' : 'secondary'}>
+                {bingo.status}
+              </Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Números Sorteados:</span>
+              <span className="font-semibold">{conferencia.length}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Progresso de Vendas:</span>
+              <span className="font-semibold">{percentualVendido.toFixed(1)}%</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Últimos Números Sorteados</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {conferencia.length > 0 ? (
+              <div className="grid grid-cols-5 gap-2">
+                {conferencia
+                  .slice(-10)
+                  .reverse()
+                  .map((item, index) => (
+                    <div
+                      key={item.id}
+                      className={`rounded p-2 text-center text-sm font-semibold ${
+                        index === 0
+                          ? "bg-yellow-200 text-yellow-800 border-2 border-yellow-400"
+                          : "bg-blue-100 text-blue-800"
+                      }`}
+                    >
+                      <div className="text-xs">
+                        {getLetraDoNumero(item.numero)}
+                      </div>
+                      <div className="font-bold">{item.numero}</div>
+                    </div>
+                  ))}
+              </div>
+            ) : (
+              <p className="text-gray-500 text-center py-4">
+                Nenhum número sorteado ainda
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </>
+  );
+
   return (
     <div className="flex min-h-screen">
       <BingoGestaoSidebar bingoId={id!} />
@@ -79,126 +204,15 @@ const BingoGestao: React.FC = () => {
           </div>
 
           <Tabs defaultValue="dashboard" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
               <TabsTrigger value="conferencia">Conferência</TabsTrigger>
-              <TabsTrigger value="compradores">Compradores</TabsTrigger>
               <TabsTrigger value="cartelas">Gestão de Cartelas</TabsTrigger>
             </TabsList>
 
-            {/* Dashboard Tab */}
+            {/* Dashboard Tab - Now the main content */}
             <TabsContent value="dashboard" className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Total de Cartelas</CardTitle>
-                    <Ticket className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{bingo.quantity_of_cartelas}</div>
-                    <p className="text-xs text-muted-foreground">
-                      Cadastradas no sistema
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Cartelas Vendidas</CardTitle>
-                    <DollarSign className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-green-600">{cartelasVendidas}</div>
-                    <p className="text-xs text-muted-foreground">
-                      {percentualVendido.toFixed(1)}% do total
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Restam Vender</CardTitle>
-                    <Ticket className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-orange-600">{cartelasRestantes}</div>
-                    <p className="text-xs text-muted-foreground">
-                      {(100 - percentualVendido).toFixed(1)}% disponíveis
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Compradores</CardTitle>
-                    <Users className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{compradores.length}</div>
-                    <p className="text-xs text-muted-foreground">
-                      Pessoas participando
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Status do Bingo</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span>Status:</span>
-                      <Badge variant={bingo.status === 'ativo' ? 'default' : 'secondary'}>
-                        {bingo.status}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span>Números Sorteados:</span>
-                      <span className="font-semibold">{conferencia.length}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span>Progresso de Vendas:</span>
-                      <span className="font-semibold">{percentualVendido.toFixed(1)}%</span>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Últimos Números Sorteados</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {conferencia.length > 0 ? (
-                      <div className="grid grid-cols-5 gap-2">
-                        {conferencia
-                          .slice(-10)
-                          .reverse()
-                          .map((item, index) => (
-                            <div
-                              key={item.id}
-                              className={`rounded p-2 text-center text-sm font-semibold ${
-                                index === 0
-                                  ? "bg-yellow-200 text-yellow-800 border-2 border-yellow-400"
-                                  : "bg-blue-100 text-blue-800"
-                              }`}
-                            >
-                              <div className="text-xs">
-                                {getLetraDoNumero(item.numero)}
-                              </div>
-                              <div className="font-bold">{item.numero}</div>
-                            </div>
-                          ))}
-                      </div>
-                    ) : (
-                      <p className="text-gray-500 text-center py-4">
-                        Nenhum número sorteado ainda
-                      </p>
-                    )}
-                  </CardContent>
-                </Card>
-              </div>
+              <DashboardContent />
             </TabsContent>
 
             {/* Conferência Tab */}
@@ -215,61 +229,6 @@ const BingoGestao: React.FC = () => {
                 bingoId={id!} 
                 quantidadeCartelas={bingo.quantity_of_cartelas} 
               />
-            </TabsContent>
-
-            {/* Compradores Tab */}
-            <TabsContent value="compradores" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Gestão de Compradores</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Nome</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Qtd. Cartelas</TableHead>
-                        <TableHead>Status Pagamento</TableHead>
-                        <TableHead>Ações</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {compradores.map((comprador) => (
-                        <TableRow key={comprador.id}>
-                          <TableCell className="font-medium">{comprador.nome}</TableCell>
-                          <TableCell>{comprador.email || "Não informado"}</TableCell>
-                          <TableCell>
-                            <Badge variant="secondary">
-                              {comprador.qtd_cartelas} cartela{comprador.qtd_cartelas > 1 ? 's' : ''}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline">
-                              Pendente
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex space-x-2">
-                              <Button size="sm" variant="outline">
-                                <Phone className="h-4 w-4" />
-                              </Button>
-                              <Button size="sm" variant="outline">
-                                <Mail className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                  {compradores.length === 0 && (
-                    <div className="text-center py-8 text-gray-500">
-                      Nenhuma cartela foi vendida ainda
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
             </TabsContent>
 
             {/* Gestão de Cartelas Tab */}
