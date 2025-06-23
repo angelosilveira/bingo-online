@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -5,7 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/layout/ProtectedRoute";
-import Layout from "@/components/layout/Layout"; // Importar o componente Layout
+import Layout from "@/components/layout/Layout";
 import Home from "./pages/Home";
 import Bingos from "./pages/Bingos";
 import NovoBingo from "./pages/NovoBingo";
@@ -13,8 +14,8 @@ import Cartelas from "./pages/Cartelas";
 import Conferencia from "./pages/Conferencia";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
-import Usuarios from "./pages/Users";
-import PublicConferencia from "./pages/PublicConferencia"; // Importar a nova página
+import Usuarios from "./pages/Users/Index";
+import PublicConferencia from "./pages/PublicConferencia";
 import BingoGestao from "./pages/Bingos/BingoGestao";
 
 const queryClient = new QueryClient();
@@ -75,14 +76,6 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <Usuarios />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/bingo/:id"
-                element={
-                  <ProtectedRoute>
-                    <BingoGestao />
                   </ProtectedRoute>
                 }
               />

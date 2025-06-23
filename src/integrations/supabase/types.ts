@@ -17,8 +17,10 @@ export type Database = {
           local: string | null
           name: string | null
           quantity_of_cartelas: number
+          responsavel_id: string | null
           status: string | null
           time: string
+          tipo: string | null
         }
         Insert: {
           created_at?: string | null
@@ -27,8 +29,10 @@ export type Database = {
           local?: string | null
           name?: string | null
           quantity_of_cartelas: number
+          responsavel_id?: string | null
           status?: string | null
           time: string
+          tipo?: string | null
         }
         Update: {
           created_at?: string | null
@@ -37,10 +41,20 @@ export type Database = {
           local?: string | null
           name?: string | null
           quantity_of_cartelas?: number
+          responsavel_id?: string | null
           status?: string | null
           time?: string
+          tipo?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "bingos_responsavel_id_fkey"
+            columns: ["responsavel_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       cartelas: {
         Row: {
@@ -49,6 +63,7 @@ export type Database = {
           id: string
           numero: number | null
           numeros: number[]
+          user_id: string | null
         }
         Insert: {
           bingo_id?: string | null
@@ -56,6 +71,7 @@ export type Database = {
           id?: string
           numero?: number | null
           numeros: number[]
+          user_id?: string | null
         }
         Update: {
           bingo_id?: string | null
@@ -63,6 +79,7 @@ export type Database = {
           id?: string
           numero?: number | null
           numeros?: number[]
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -70,6 +87,13 @@ export type Database = {
             columns: ["bingo_id"]
             isOneToOne: false
             referencedRelation: "bingos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cartelas_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -154,18 +178,21 @@ export type Database = {
       numeros_sorteados: {
         Row: {
           bingo_id: string | null
+          created_at: string
           id: string
           numero: number
           sorteado_em: string | null
         }
         Insert: {
           bingo_id?: string | null
+          created_at?: string
           id?: string
           numero: number
           sorteado_em?: string | null
         }
         Update: {
           bingo_id?: string | null
+          created_at?: string
           id?: string
           numero?: number
           sorteado_em?: string | null
@@ -232,22 +259,34 @@ export type Database = {
       }
       users: {
         Row: {
+          created_at: string | null
           id: string
           name: string
+          password: string
           phone: string | null
-          role: Database["public"]["Enums"]["role_type"]
+          role: string
+          updated_at: string | null
+          username: string
         }
         Insert: {
-          id: string
+          created_at?: string | null
+          id?: string
           name: string
+          password?: string
           phone?: string | null
-          role: Database["public"]["Enums"]["role_type"]
+          role?: string
+          updated_at?: string | null
+          username: string
         }
         Update: {
+          created_at?: string | null
           id?: string
           name?: string
+          password?: string
           phone?: string | null
-          role?: Database["public"]["Enums"]["role_type"]
+          role?: string
+          updated_at?: string | null
+          username?: string
         }
         Relationships: []
       }
