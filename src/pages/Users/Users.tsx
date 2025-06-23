@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import {
   Table,
@@ -12,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Edit, Trash2 } from "lucide-react";
 import { UserWithoutPassword } from "@/models/User";
-import { userService } from "@/services/userService";
+import { UserService } from "@/services/userService";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -32,7 +31,7 @@ const Users = () => {
 
   const loadUsers = async () => {
     try {
-      const usersData = await userService.getAllUsers();
+      const usersData = await UserService.listUsers();
       setUsers(usersData);
     } catch (error) {
       console.error("Erro ao carregar usuários:", error);
@@ -44,7 +43,7 @@ const Users = () => {
   const handleDelete = async (id: string) => {
     if (confirm("Tem certeza que deseja excluir este usuário?")) {
       try {
-        await userService.deleteUser(id);
+        await UserService.deleteUser(id);
         setUsers(users.filter((u) => u.id !== id));
       } catch (error) {
         console.error("Erro ao excluir usuário:", error);
