@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import SorteioBoard from "@/components/sorteio/SorteioBoard";
@@ -16,12 +17,12 @@ const PublicConferencia = () => {
     const fetchBingo = async () => {
       const { data, error } = await supabase
         .from("bingos")
-        .select("nome, quantidade_cartelas")
+        .select("name, quantity_of_cartelas")
         .eq("id", bingoId)
         .single();
       if (data) {
-        setBingoNome(data.nome);
-        setQuantidadeCartelas(data.quantidade_cartelas);
+        setBingoNome(data.name);
+        setQuantidadeCartelas(data.quantity_of_cartelas);
       }
     };
     fetchBingo();

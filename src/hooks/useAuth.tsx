@@ -1,3 +1,4 @@
+
 import {
   useState,
   useEffect,
@@ -5,20 +6,20 @@ import {
   useContext,
   ReactNode,
 } from "react";
-import { User } from "@/models/User";
+import { UserWithoutPassword } from "@/models/User";
 import { sessionService } from "@/services/sessionService";
 
 interface AuthContextType {
-  user: Omit<User, "password"> | null;
+  user: UserWithoutPassword | null;
   loading: boolean;
   signOut: () => void;
-  login: (user: Omit<User, "password">) => void;
+  login: (user: UserWithoutPassword) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<Omit<User, "password"> | null>(null);
+  const [user, setUser] = useState<UserWithoutPassword | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -33,7 +34,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(null);
   };
 
-  const login = (user: Omit<User, "password">) => {
+  const login = (user: UserWithoutPassword) => {
     sessionService.setUser(user);
     setUser(user);
   };

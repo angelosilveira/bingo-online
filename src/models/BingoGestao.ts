@@ -1,10 +1,11 @@
+
 export interface Bingo {
   id: string;
-  nome: string;
+  name: string; // Changed from 'nome' to match database
   responsavel_id: string;
   responsavel_nome: string;
-  data: string;
-  total_cartelas: number;
+  date: string;
+  quantity_of_cartelas: number; // Changed from 'total_cartelas' to match database
   status: string;
 }
 

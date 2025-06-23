@@ -1,11 +1,12 @@
+
 // src/services/userService.ts
 import { supabase } from "@/integrations/supabase/client";
-import { User, CreateUserData, UpdateUserData } from "@/models/User";
+import { User, CreateUserData, UpdateUserData, UserWithoutPassword } from "@/models/User";
 import bcrypt from "bcryptjs";
 
 export class UserService {
   // Listar todos os usuários
-  static async listUsers(): Promise<User[]> {
+  static async listUsers(): Promise<UserWithoutPassword[]> {
     const { data, error } = await supabase
       .from("users")
       .select("id,name,username,phone,role,created_at")
@@ -16,7 +17,7 @@ export class UserService {
       return [];
     }
 
-    return (data as User[]) || [];
+    return (data as UserWithoutPassword[]) || [];
   }
 
   static async checkUsernameExists(username: string): Promise<boolean> {
@@ -64,7 +65,7 @@ export class UserService {
         throw error;
       }
 
-      return data;
+      return data as User;
     } catch (error) {
       console.error("Erro ao criar usuário:", error);
       return null;
@@ -75,7 +76,7 @@ export class UserService {
   static async updateUser(
     userId: string,
     userData: UpdateUserData
-  ): Promise<User | null> {
+  ): Promise<UserWithoutPassword | null> {
     try {
       // Atualizar dados na tabela users (sem username)
       const { data, error } = await supabase
@@ -94,7 +95,7 @@ export class UserService {
         throw error;
       }
 
-      return data;
+      return data as UserWithoutPassword;
     } catch (error) {
       console.error("Erro ao atualizar usuário:", error);
       throw error;
@@ -122,7 +123,7 @@ export class UserService {
   }
 
   // Buscar usuário por ID
-  static async getUserById(userId: string): Promise<User | null> {
+  static async getUserById(userId: string): Promise<UserWithoutPassword | null> {
     const { data, error } = await supabase
       .from("users")
       .select("id,name,username,phone,role,created_at")
@@ -134,6 +135,6 @@ export class UserService {
       return null;
     }
 
-    return data;
+    return data as UserWithoutPassword;
   }
 }
