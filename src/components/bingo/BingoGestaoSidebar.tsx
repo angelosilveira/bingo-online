@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import {
   Sidebar,
   SidebarContent,
@@ -16,7 +16,7 @@ interface BingoGestaoSidebarProps {
 export default function BingoGestaoSidebar({
   bingoId,
 }: BingoGestaoSidebarProps) {
-  const navigate = useNavigate();
+  const location = useLocation();
   return (
     <Sidebar>
       <SidebarHeader>
@@ -34,37 +34,55 @@ export default function BingoGestaoSidebar({
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
-              <button
-                onClick={() => navigate("/bingos")}
-                className="w-full flex items-center gap-2"
-              >
+              <Link to="/bingos" className="w-full flex items-center gap-2">
                 <ArrowLeft size={16} />
                 <span>Voltar para Bingos</span>
-              </button>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <button className="w-full flex items-center gap-2">
+            <SidebarMenuButton
+              asChild
+              isActive={
+                location.pathname === `/bingo${bingoId}` ||
+                location.pathname === `/bingos/gestao/${bingoId}`
+              }
+            >
+              <Link
+                to={`/bingo/${bingoId}`}
+                className="w-full flex items-center gap-2"
+              >
                 <Info size={16} />
                 <span>Informações Gerais</span>
-              </button>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <button className="w-full flex items-center gap-2">
+            <SidebarMenuButton
+              asChild
+              isActive={location.pathname === `/bingo${bingoId}/conferencia`}
+            >
+              <Link
+                to={`/bingo/${bingoId}/conferencia`}
+                className="w-full flex items-center gap-2"
+              >
                 <Trophy size={16} />
                 <span>Tabela de Conferência</span>
-              </button>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <button className="w-full flex items-center gap-2">
+            <SidebarMenuButton
+              asChild
+              isActive={location.pathname === `/bingo${bingoId}/compradores`}
+            >
+              <Link
+                to={`/bingo${bingoId}/compradores`}
+                className="w-full flex items-center gap-2"
+              >
                 <Users size={16} />
                 <span>Compradores</span>
-              </button>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

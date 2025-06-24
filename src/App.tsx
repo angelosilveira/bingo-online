@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -14,9 +13,10 @@ import Cartelas from "./pages/Cartelas";
 import Conferencia from "./pages/Conferencia";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
-import Usuarios from "./pages/Users/Index";
+import Usuarios from "./pages/Users/index";
 import PublicConferencia from "./pages/PublicConferencia";
 import BingoGestao from "./pages/Bingos/BingoGestao";
+import BingoGestaoConferencia from "./pages/Bingos/BingoGestaoConferencia";
 
 const queryClient = new QueryClient();
 
@@ -84,6 +84,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <BingoGestao />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/bingo/:id/conferencia"
+                element={
+                  <ProtectedRoute>
+                    <BingoGestaoConferencia />
                   </ProtectedRoute>
                 }
               />

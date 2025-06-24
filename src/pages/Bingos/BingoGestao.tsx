@@ -1,271 +1,148 @@
-
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   getBingoById,
   getConferenciaByBingoId,
   getCompradoresByBingoId,
-} from "../../services/bingoGestaoService";
-import { useAuth } from "../../hooks/useAuth";
-import { Bingo, ConferenciaItem, Comprador } from "../../models/BingoGestao";
+} from "@/services/bingoGestaoService";
+import { Bingo } from "@/models/BingoGestao";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import BingoGestaoSidebar from "@/components/bingo/BingoGestaoSidebar";
-import BingoConferencia from "@/components/bingo/BingoConferencia";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Phone, Mail, DollarSign, Ticket, Users } from "lucide-react";
+import { Trophy, CreditCard } from "lucide-react";
+import BingoGestaoSidebar from "@/components/bingo/BingoGestaoSidebar";
 
-const BingoGestao: React.FC = () => {
+const BingoGestao = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
   const [bingo, setBingo] = useState<Bingo | null>(null);
-  const [conferencia, setConferencia] = useState<ConferenciaItem[]>([]);
-  const [compradores, setCompradores] = useState<Comprador[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user || user.role !== "admin") {
-      navigate("/");
-      return;
-    }
     const fetchData = async () => {
-      try {
-        setLoading(true);
-        const bingoData = await getBingoById(id!);
-        const conferenciaData = await getConferenciaByBingoId(id!);
-        const compradoresData = await getCompradoresByBingoId(id!);
-        setBingo(bingoData);
-        setConferencia(conferenciaData);
-        setCompradores(compradoresData);
-      } catch (error) {
-        console.error("Erro ao carregar dados:", error);
-      } finally {
-        setLoading(false);
-      }
+      setLoading(true);
+      const bingoData = await getBingoById(id!);
+      setBingo(bingoData);
+      setLoading(false);
     };
     fetchData();
-  }, [id, user, navigate]);
+  }, [id]);
 
-  if (loading) return <div className="flex items-center justify-center min-h-screen">Carregando...</div>;
-  if (!bingo) return <div className="flex items-center justify-center min-h-screen">Bingo não encontrado.</div>;
-
-  // Cálculos para o dashboard
-  const cartelasVendidas = compradores.reduce((total, comprador) => total + comprador.qtd_cartelas, 0);
-  const cartelasRestantes = bingo.quantity_of_cartelas - cartelasVendidas;
-  const percentualVendido = (cartelasVendidas / bingo.quantity_of_cartelas) * 100;
-
-  const getLetraDoNumero = (numero: number): string => {
-    if (numero <= 15) return "B";
-    if (numero <= 30) return "I";
-    if (numero <= 45) return "N";
-    if (numero <= 60) return "G";
-    return "O";
-  };
-
-  // Dashboard content component
-  const DashboardContent = () => (
-    <>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total de Cartelas</CardTitle>
-            <Ticket className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{bingo.quantity_of_cartelas}</div>
-            <p className="text-xs text-muted-foreground">
-              Cadastradas no sistema
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Cartelas Vendidas</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">{cartelasVendidas}</div>
-            <p className="text-xs text-muted-foreground">
-              {percentualVendido.toFixed(1)}% do total
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Restam Vender</CardTitle>
-            <Ticket className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-orange-600">{cartelasRestantes}</div>
-            <p className="text-xs text-muted-foreground">
-              {(100 - percentualVendido).toFixed(1)}% disponíveis
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Compradores</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{compradores.length}</div>
-            <p className="text-xs text-muted-foreground">
-              Pessoas participando
-            </p>
-            <Button 
-              size="sm" 
-              className="mt-2 w-full"
-              onClick={() => navigate('/compradores')}
-            >
-              Ver Compradores
-            </Button>
-          </CardContent>
-        </Card>
+  if (loading)
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        Carregando...
       </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Status do Bingo</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span>Status:</span>
-              <Badge variant={bingo.status === 'ativo' ? 'default' : 'secondary'}>
-                {bingo.status}
-              </Badge>
-            </div>
-            <div className="flex items-center justify-between">
-              <span>Números Sorteados:</span>
-              <span className="font-semibold">{conferencia.length}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span>Progresso de Vendas:</span>
-              <span className="font-semibold">{percentualVendido.toFixed(1)}%</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Últimos Números Sorteados</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {conferencia.length > 0 ? (
-              <div className="grid grid-cols-5 gap-2">
-                {conferencia
-                  .slice(-10)
-                  .reverse()
-                  .map((item, index) => (
-                    <div
-                      key={item.id}
-                      className={`rounded p-2 text-center text-sm font-semibold ${
-                        index === 0
-                          ? "bg-yellow-200 text-yellow-800 border-2 border-yellow-400"
-                          : "bg-blue-100 text-blue-800"
-                      }`}
-                    >
-                      <div className="text-xs">
-                        {getLetraDoNumero(item.numero)}
-                      </div>
-                      <div className="font-bold">{item.numero}</div>
-                    </div>
-                  ))}
-              </div>
-            ) : (
-              <p className="text-gray-500 text-center py-4">
-                Nenhum número sorteado ainda
-              </p>
-            )}
-          </CardContent>
-        </Card>
+    );
+  if (!bingo)
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        Bingo não encontrado.
       </div>
-    </>
-  );
+    );
+
+  // Exemplo de dados dinâmicos, substitua pelos dados reais do bingo
+  const stats = [
+    {
+      title: "Cartelas Cadastradas",
+      value: bingo.total_cartelas || 0,
+      description: "Total disponível",
+      icon: CreditCard,
+      color: "text-green-600",
+    },
+    {
+      title: "Prêmios Pendentes",
+      value: bingo.premios_pendentes || 0,
+      description: "Aguardando sorteio",
+      icon: Trophy,
+      color: "text-yellow-600",
+    },
+  ];
+
+  const quickActions = [
+    {
+      title: "Iniciar Conferência",
+      description: "Comece o sorteio em tempo real",
+      action: () => navigate(`/bingo${id}/conferencia`),
+      icon: Trophy,
+      color: "bg-green-500 hover:bg-green-600",
+    },
+  ];
 
   return (
     <div className="flex min-h-screen">
       <BingoGestaoSidebar bingoId={id!} />
-      <main className="flex-1 p-6 bg-gray-50">
-        <div className="max-w-7xl mx-auto">
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Gestão do Bingo: {bingo.name}
-            </h1>
-            <p className="text-gray-600">
-              Responsável: {bingo.responsavel_nome} • Data: {new Date(bingo.date).toLocaleDateString()}
-            </p>
-          </div>
-
-          <Tabs defaultValue="dashboard" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-              <TabsTrigger value="conferencia">Conferência</TabsTrigger>
-              <TabsTrigger value="cartelas">Gestão de Cartelas</TabsTrigger>
-            </TabsList>
-
-            {/* Dashboard Tab - Now the main content */}
-            <TabsContent value="dashboard" className="space-y-6">
-              <DashboardContent />
-            </TabsContent>
-
-            {/* Conferência Tab */}
-            <TabsContent value="conferencia" className="space-y-6">
-              <div className="mb-8">
-                <h2 className="text-2xl font-bold text-gray-900">
-                  Conferência do Bingo
-                </h2>
-                <p className="text-gray-600 mt-2">
-                  Controle o sorteio e acompanhe o ranking em tempo real
-                </p>
-              </div>
-              <BingoConferencia 
-                bingoId={id!} 
-                quantidadeCartelas={bingo.quantity_of_cartelas} 
-              />
-            </TabsContent>
-
-            {/* Gestão de Cartelas Tab */}
-            <TabsContent value="cartelas" className="space-y-6">
-              <Card>
+      <main className="flex-1 p-6 space-y-8">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">
+            Dashboard do Bingo
+          </h1>
+          <p className="text-gray-600 mt-2">
+            Visão geral do bingo: <b>{bingo.nome}</b>
+          </p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {stats.map((stat, index) => (
+            <Card key={index} className="hover:shadow-md transition-shadow">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-gray-600">
+                  {stat.title}
+                </CardTitle>
+                <stat.icon className={`h-4 w-4 ${stat.color}`} />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stat.value}</div>
+                <p className="text-xs text-gray-500 mt-1">{stat.description}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        <div>
+          <h2 className="text-xl font-semibold mb-4">Ações Rápidas</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {quickActions.map((action, index) => (
+              <Card
+                key={index}
+                className="hover:shadow-lg transition-shadow cursor-pointer"
+              >
                 <CardHeader>
-                  <CardTitle>Gestão de Cartelas</CardTitle>
+                  <CardTitle className="flex items-center gap-3">
+                    <div
+                      className={`p-2 rounded-lg ${action.color} text-white`}
+                    >
+                      <action.icon size={20} />
+                    </div>
+                    {action.title}
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="p-4 border rounded-lg">
-                        <h3 className="font-semibold text-green-600">Vendidas</h3>
-                        <p className="text-2xl font-bold">{cartelasVendidas}</p>
-                      </div>
-                      <div className="p-4 border rounded-lg">
-                        <h3 className="font-semibold text-orange-600">Disponíveis</h3>
-                        <p className="text-2xl font-bold">{cartelasRestantes}</p>
-                      </div>
-                      <div className="p-4 border rounded-lg">
-                        <h3 className="font-semibold text-blue-600">Total</h3>
-                        <p className="text-2xl font-bold">{bingo.quantity_of_cartelas}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="text-center py-8 text-gray-500">
-                      <p>Funcionalidade de gestão detalhada de cartelas em desenvolvimento</p>
-                      <Button className="mt-4" variant="outline">
-                        Gerenciar Cartelas Individualmente
-                      </Button>
-                    </div>
-                  </div>
+                  <p className="text-gray-600 mb-4">{action.description}</p>
+                  <Button onClick={action.action} className="w-full">
+                    Executar
+                  </Button>
                 </CardContent>
               </Card>
-            </TabsContent>
-          </Tabs>
+            ))}
+          </div>
         </div>
+        {/* Resumo de Atividades Recentes (pode ser customizado para o bingo) */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Atividades Recentes</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div>
+                  <p className="font-medium">Bingo criado</p>
+                  <p className="text-sm text-gray-500">
+                    {bingo.data ? new Date(bingo.data).toLocaleString() : "-"}
+                  </p>
+                </div>
+              </div>
+              {/* Adicione mais atividades conforme necessário */}
+            </div>
+          </CardContent>
+        </Card>
       </main>
     </div>
   );
