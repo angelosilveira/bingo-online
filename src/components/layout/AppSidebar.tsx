@@ -55,6 +55,12 @@ const menuItems = [
     url: "/usuarios",
     icon: Users,
   },
+  {
+    title: "Compradores",
+    url: "/compradores",
+    icon: Users,
+    proprietarioOnly: true,
+  },
 ];
 
 export function AppSidebar() {
@@ -65,7 +71,9 @@ export function AppSidebar() {
   // Se for proprietario, só mostra Conferência
   const filteredMenuItems =
     user?.role === "proprietario"
-      ? menuItems.filter((item) => item.title === "Conferência")
+      ? menuItems.filter(
+          (item) => item.title === "Conferência" || item.title === "Compradores"
+        )
       : menuItems.filter((item) => !item.adminOnly || user?.role === "admin");
 
   return (

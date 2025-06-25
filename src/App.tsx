@@ -104,6 +104,14 @@ const App = () => (
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="/compradores"
+                element={
+                  <ProtectedRoute>
+                    <Compradores />
+                  </ProtectedRoute>
+                }
+              />
             </Route>
             {/* Rota pública FORA do Layout para não ter sidebar nem header */}
             <Route

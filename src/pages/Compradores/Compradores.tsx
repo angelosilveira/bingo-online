@@ -17,6 +17,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { getBingoCartelasInfo } from "@/services/cartelaHelperService";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 interface CompradorDetalhado {
   id: string;
@@ -28,6 +29,7 @@ interface CompradorDetalhado {
 
 const Compradores = () => {
   const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
   const [compradores, setCompradores] = useState<CompradorDetalhado[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -89,21 +91,43 @@ const Compradores = () => {
   useEffect(() => {
     const fetchCompradores = async () => {
       setLoading(true);
-      if (id) {
-        try {
+      try {
+        if (id) {
+          // Gestão de bingo: busca compradores do bingo
           const data = await getCompradoresDetalhadosByBingoId(id);
           setCompradores(data);
           const info = await getBingoCartelasInfo(id);
-          console.log("🚀 ~ fetchCompradores ~ info:", info);
           setCartelasInfo(info);
-        } catch (e) {
-          setCompradores([]);
+        } else if (user?.role === "proprietario") {
+          // Proprietário: busca compradores vinculados ao user.id
+          const { data: vendidos, error } = await supabase
+            .from("cartelas_vendidas")
+            .select(
+              "id, comprador_nome, comprador_telefone, pago, cartela_id, cartelas(numero)"
+            )
+            .eq("user_id", user.id);
+          if (error) throw error;
+          const compradoresList = (vendidos || []).map((v: any) => ({
+            id: v.id,
+            nome: v.comprador_nome,
+            telefone: v.comprador_telefone,
+            numero_cartela: v.cartelas?.numero,
+            pago: v.pago,
+          }));
+          setCompradores(compradoresList);
+          setCartelasInfo({
+            totalPermitidas: 0, // Não exibe helper global fora do contexto de bingo
+            cadastradas: compradoresList.length,
+            numerosCadastrados: compradoresList.map((c) => c.numero_cartela),
+          });
         }
+      } catch (e) {
+        setCompradores([]);
       }
       setLoading(false);
     };
     fetchCompradores();
-  }, [id]);
+  }, [id, user]);
 
   const filteredCompradores = compradores.filter(
     (c) =>
