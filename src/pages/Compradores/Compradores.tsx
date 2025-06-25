@@ -189,7 +189,7 @@ const Compradores = () => {
   };
 
   // Função para excluir comprador
-  const handleDeleteComprador = async (id: string) => {
+  const handleDeleteComprador = async (compradorId: string) => {
     if (!window.confirm("Tem certeza que deseja excluir este comprador?"))
       return;
     setLoading(true);
@@ -197,9 +197,9 @@ const Compradores = () => {
       const { error } = await supabase
         .from("cartelas_vendidas")
         .delete()
-        .eq("id", id);
+        .eq("id", compradorId);
       if (error) throw error;
-      // Atualiza lista após exclusão
+      // Atualiza lista após exclusão usando o id do bingo
       if (id) {
         const data = await getCompradoresDetalhadosByBingoId(id);
         setCompradores(data);

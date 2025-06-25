@@ -6,7 +6,7 @@ export async function getBingoCartelasInfo(bingoId: string) {
     .from("bingos")
     .select("quantity_of_cartelas")
     .eq("id", bingoId)
-    .single();
+    .maybeSingle();
   if (errorBingo) throw errorBingo;
   // Busca cartelas_vendidas desse bingo e faz join para pegar o número da cartela
   const { data: vendidas, error: errorVendidas } = await supabase
