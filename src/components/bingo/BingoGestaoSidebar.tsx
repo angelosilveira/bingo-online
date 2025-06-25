@@ -74,10 +74,10 @@ export default function BingoGestaoSidebar({
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
-              isActive={location.pathname === `/bingo${bingoId}/compradores`}
+              isActive={location.pathname === `/bingo/${bingoId}/compradores`}
             >
               <Link
-                to={`/bingo${bingoId}/compradores`}
+                to={`/bingo/${bingoId}/compradores`}
                 className="w-full flex items-center gap-2"
               >
                 <Users size={16} />

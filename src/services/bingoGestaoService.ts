@@ -1,4 +1,3 @@
-
 import { Bingo, ConferenciaItem, Comprador } from "../models/BingoGestao";
 import { supabase } from "../integrations/supabase/client";
 
@@ -55,4 +54,31 @@ export async function getCompradoresByBingoId(
     compradoresMap[uid].qtd_cartelas++;
   });
   return Object.values(compradoresMap);
+}
+
+export async function getCompradoresDetalhadosByBingoId(bingoId: string) {
+  // Busca todas as cartelas do bingo
+  const { data: cartelas, error: errorCartelas } = await supabase
+    .from("cartelas")
+    .select("id, numero");
+  if (errorCartelas) throw errorCartelas;
+  const cartelaIds = (cartelas || []).map((c: any) => c.id);
+  if (cartelaIds.length === 0) return [];
+  // Busca compradores das cartelas
+  const { data: vendidos, error: errorVendidos } = await supabase
+    .from("cartelas_vendidas")
+    .select("id, comprador_nome, comprador_telefone, pago, cartela_id")
+    .in("cartela_id", cartelaIds);
+  if (errorVendidos) throw errorVendidos;
+  // Junta os dados
+  return (vendidos || []).map((v: any) => {
+    const cartela = (cartelas || []).find((c: any) => c.id === v.cartela_id);
+    return {
+      id: v.id,
+      nome: v.comprador_nome,
+      telefone: v.comprador_telefone,
+      numero_cartela: cartela?.numero,
+      pago: v.pago,
+    };
+  });
 }

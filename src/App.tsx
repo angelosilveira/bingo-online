@@ -17,6 +17,7 @@ import Usuarios from "./pages/Users/index";
 import PublicConferencia from "./pages/PublicConferencia";
 import BingoGestao from "./pages/Bingos/BingoGestao";
 import BingoGestaoConferencia from "./pages/Bingos/BingoGestaoConferencia";
+import Compradores from "./pages/Compradores/Compradores";
 
 const queryClient = new QueryClient();
 
@@ -92,6 +93,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <BingoGestaoConferencia />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/bingo/:id/compradores"
+                element={
+                  <ProtectedRoute>
+                    <Compradores />
                   </ProtectedRoute>
                 }
               />
