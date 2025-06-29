@@ -66,8 +66,15 @@ const BingoCard = ({ bingo, onEdit, onView }: BingoCardProps) => {
           <div className="flex items-center text-sm text-gray-600">
             <Calendar className="w-4 h-4 mr-2" />
             {bingo.date
-              ? new Date(bingo.date).toLocaleDateString()
-              : ""} às {bingo.time}
+              ? (() => {
+                  // Mostra a data sem considerar o fuso local (YYYY-MM-DD ou YYYY-MM-DDTHH:mm:ss)
+                  let dateStr = bingo.date;
+                  if (dateStr.includes("T")) dateStr = dateStr.split("T")[0];
+                  const [year, month, day] = dateStr.split("-");
+                  return `${day}/${month}/${year}`;
+                })()
+              : ""}{" "}
+            às {bingo.time}
           </div>
           <div className="flex items-center text-sm text-gray-600">
             <MapPin className="w-4 h-4 mr-2" />
