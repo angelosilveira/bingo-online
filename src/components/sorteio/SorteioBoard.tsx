@@ -1,12 +1,20 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 interface SorteioBoardProps {
   numerosSorteados: number[];
   onSortear: (numero: number) => void;
   disabled?: boolean;
   quantidadeCartelas?: number;
+  quantidadeVendidas?: number; // NOVO: número de cartelas vendidas
 }
 
 const SorteioBoard = ({
@@ -14,8 +22,11 @@ const SorteioBoard = ({
   onSortear,
   disabled = false,
   quantidadeCartelas,
+  quantidadeVendidas = 0,
 }: SorteioBoardProps) => {
   const [ultimoNumero, setUltimoNumero] = useState<number | null>(null);
+  const [bingoIniciado, setBingoIniciado] = useState(false);
+  const [showModal, setShowModal] = useState(false);
 
   const bingoColumns = {
     B: Array.from({ length: 15 }, (_, i) => i + 1),
@@ -46,6 +57,12 @@ const SorteioBoard = ({
     if (numero <= 60) return "G";
     return "O";
   };
+
+  // Verifica se há cartelas não vendidas
+  const haCartelasNaoVendidas =
+    quantidadeCartelas !== undefined &&
+    quantidadeVendidas !== undefined &&
+    quantidadeVendidas < quantidadeCartelas;
 
   return (
     <div className="space-y-6">
@@ -89,16 +106,67 @@ const SorteioBoard = ({
             </div>
           )}
 
-          {typeof onSortear === "function" && !disabled && (
+          {/* Botão de iniciar bingo/modal */}
+          {!bingoIniciado ? (
             <Button
-              onClick={sortearNumero}
-              disabled={disabled || numerosDisponiveis.length === 0}
-              className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-8 py-3 text-lg"
+              onClick={() => setShowModal(true)}
+              className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white px-8 py-3 text-lg"
               size="lg"
             >
-              🎯 Sortear Número
+              🎲 Iniciar Bingo
             </Button>
+          ) : (
+            typeof onSortear === "function" &&
+            !disabled && (
+              <Button
+                onClick={sortearNumero}
+                disabled={disabled || numerosDisponiveis.length === 0}
+                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-8 py-3 text-lg"
+                size="lg"
+              >
+                🎯 Sortear Número
+              </Button>
+            )
           )}
+
+          {/* Modal de confirmação */}
+          <Dialog open={showModal} onOpenChange={setShowModal}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Iniciar Bingo</DialogTitle>
+              </DialogHeader>
+              <div className="py-2 text-gray-700">
+                {haCartelasNaoVendidas ? (
+                  <>
+                    Existem cartelas que <b>não foram vendidas</b>.
+                    <br />
+                    Ao iniciar o bingo, <b>apenas as cartelas vendidas</b>{" "}
+                    poderão ser conferidas.
+                    <br />
+                    Tem certeza que deseja iniciar o bingo e descartar as
+                    cartelas não vendidas?
+                  </>
+                ) : (
+                  <>Deseja realmente iniciar o bingo?</>
+                )}
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setShowModal(false)}>
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={() => {
+                    setBingoIniciado(true);
+                    setShowModal(false);
+                  }}
+                  className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white"
+                >
+                  Iniciar
+                  {haCartelasNaoVendidas ? " e descartar cartelas" : ""}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </CardContent>
       </Card>
 
