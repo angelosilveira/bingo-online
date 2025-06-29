@@ -46,9 +46,42 @@ const Cartelas = () => {
     cartela.numero?.toString().includes(searchTerm)
   );
 
+  // Função utilitária para montar a cartela com símbolo B no centro
+  function montarCartelaComSimbolo(numeros: number[]) {
+    // Espera 24 números, insere símbolo na posição central (3ª da coluna N)
+    if (numeros.length !== 24) return null;
+    // Monta as colunas
+    const colunas = [
+      numeros.slice(0, 5), // B
+      numeros.slice(5, 10), // I
+      numeros.slice(10, 14), // N (faltando 1)
+      numeros.slice(14, 19), // G
+      numeros.slice(19, 24), // O
+    ];
+    // Insere símbolo na posição central da coluna N (posição 2, zero-based)
+    colunas[2].splice(2, 0, -1); // -1 será o símbolo
+    // Junta tudo em um array único de 25 posições
+    return [
+      ...colunas[0],
+      ...colunas[1],
+      ...colunas[2],
+      ...colunas[3],
+      ...colunas[4],
+    ];
+  }
+
   const handleSaveCartela = async () => {
-    if (novaCartela.numeros.length !== 25) {
-      alert("A cartela deve ter exatamente 25 números!");
+    // Validação: só pode ter 24 números
+    if (novaCartela.numeros.length !== 24) {
+      alert(
+        "A cartela deve ter exatamente 24 números! O centro será preenchido automaticamente com o símbolo."
+      );
+      return;
+    }
+    // Monta a cartela final com símbolo
+    const cartelaFinal = montarCartelaComSimbolo(novaCartela.numeros);
+    if (!cartelaFinal) {
+      alert("Erro ao montar a cartela.");
       return;
     }
 
@@ -58,7 +91,7 @@ const Cartelas = () => {
         // Editar cartela existente
         const { error } = await supabase
           .from("cartelas")
-          .update({ numeros: novaCartela.numeros })
+          .update({ numeros: cartelaFinal })
           .eq("id", editingCartela.id);
 
         if (error) throw error;
@@ -74,7 +107,7 @@ const Cartelas = () => {
 
         const { error: insertError } = await supabase.from("cartelas").insert({
           numero: data,
-          numeros: novaCartela.numeros,
+          numeros: cartelaFinal,
         });
 
         if (insertError) throw insertError;
@@ -102,9 +135,13 @@ const Cartelas = () => {
   };
 
   const handleEditCartela = (cartela: any) => {
+    // Remove o símbolo para edição
+    const numerosSemSimbolo = cartela.numeros.filter(
+      (n: any) => typeof n === "number"
+    );
     setEditingCartela(cartela);
     setNovaCartela({
-      numeros: cartela.numeros,
+      numeros: numerosSemSimbolo,
     });
     setShowForm(true);
   };
@@ -163,7 +200,11 @@ const Cartelas = () => {
                 numeroCartela={
                   editingCartela ? editingCartela.numero : cartelas.length + 1
                 }
-                numeros={novaCartela.numeros}
+                numeros={
+                  showForm && !editingCartela
+                    ? novaCartela.numeros
+                    : novaCartela.numeros
+                }
                 onChange={(numeros) =>
                   setNovaCartela((prev) => ({ ...prev, numeros }))
                 }

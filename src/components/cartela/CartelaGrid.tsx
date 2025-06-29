@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface CartelaGridProps {
   numeroCartela: number;
-  numeros: number[];
+  numeros: (number | string)[];
   onChange: (numeros: number[]) => void;
   readOnly?: boolean;
 }
@@ -14,7 +14,8 @@ const CartelaGrid = ({
   onChange,
   readOnly = false,
 }: CartelaGridProps) => {
-  const [selectedNumbers, setSelectedNumbers] = useState<number[]>(numeros);
+  const [selectedNumbers, setSelectedNumbers] =
+    useState<(number | string)[]>(numeros);
 
   useEffect(() => {
     setSelectedNumbers(numeros);
@@ -28,8 +29,9 @@ const CartelaGrid = ({
     O: Array.from({ length: 15 }, (_, i) => i + 61),
   };
 
-  const handleNumberClick = (numero: number) => {
+  const handleNumberClick = (numero: number | string) => {
     if (readOnly) return;
+    if (typeof numero !== "number") return;
 
     // Descobre a letra da coluna do número
     let letter: keyof typeof bingoColumns | undefined;
@@ -41,31 +43,52 @@ const CartelaGrid = ({
     }
     if (!letter) return;
 
+    // Limite de seleção por coluna
+    let maxPorColuna = 5;
+    if (letter === "N") maxPorColuna = 4; // Só 4 números na N
+
     // Conta quantos já estão selecionados para essa letra
-    const selectedInColumn = selectedNumbers.filter((n) =>
-      bingoColumns[letter!].includes(n)
+    const selectedInColumn = selectedNumbers.filter(
+      (n) =>
+        typeof n === "number" && bingoColumns[letter!].includes(n as number)
     ).length;
 
     let newNumbers;
     if (selectedNumbers.includes(numero)) {
       newNumbers = selectedNumbers.filter((n) => n !== numero);
     } else {
-      if (selectedInColumn >= 5) {
-        alert(`Você só pode selecionar até 5 números para a letra ${letter}`);
+      if (selectedInColumn >= maxPorColuna) {
+        alert(
+          `Você só pode selecionar até ${maxPorColuna} número${
+            maxPorColuna > 1 ? "s" : ""
+          } para a letra ${letter}`
+        );
         return;
       }
-      if (selectedNumbers.length >= 25) {
-        alert("Você pode selecionar no máximo 25 números por cartela");
+      if (selectedNumbers.length >= 24) {
+        alert("Você pode selecionar no máximo 24 números por cartela");
         return;
       }
-      newNumbers = [...selectedNumbers, numero].sort((a, b) => a - b);
+      newNumbers = [...selectedNumbers, numero].sort(
+        (a, b) => Number(a) - Number(b)
+      );
     }
 
     setSelectedNumbers(newNumbers);
-    onChange(newNumbers);
+    onChange(newNumbers.filter((n) => typeof n === "number") as number[]);
   };
 
   const getColumnNumbers = (letter: keyof typeof bingoColumns) => {
+    if (letter === "N") {
+      // Para a coluna N, insere o símbolo na posição 2 (índice 2)
+      const nums = bingoColumns[letter].filter((num) =>
+        selectedNumbers.includes(num)
+      );
+      // Usa -1 como placeholder para o símbolo
+      const numsWithSymbol = [...nums];
+      numsWithSymbol.splice(2, 0, -1);
+      return numsWithSymbol;
+    }
     return bingoColumns[letter].filter((num) => selectedNumbers.includes(num));
   };
 
@@ -83,12 +106,12 @@ const CartelaGrid = ({
               </div>
               <div className="space-y-1">
                 {getColumnNumbers(letter as keyof typeof bingoColumns).map(
-                  (numero) => (
+                  (numero, idx) => (
                     <div
-                      key={numero}
+                      key={idx}
                       className="h-12 flex items-center justify-center text-lg font-semibold rounded bg-blue-100"
                     >
-                      {numero}
+                      {numero === -1 ? "🅱️" : numero}
                     </div>
                   )
                 )}
