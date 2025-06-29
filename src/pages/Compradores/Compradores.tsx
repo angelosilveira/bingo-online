@@ -46,6 +46,7 @@ const Compradores = () => {
     cadastradas: number;
     numerosCadastrados: number[];
   }>({ totalPermitidas: 0, cadastradas: 0, numerosCadastrados: [] });
+  const [bingoIdState, setBingoIdState] = useState<string | null>(id || null);
 
   // Move o schema para dentro do componente para acessar cartelasInfo e editing
   const compradorSchema = z.object({
@@ -93,33 +94,36 @@ const Compradores = () => {
       setLoading(true);
       try {
         if (id) {
+          setBingoIdState(id); // sempre atualiza o estado
           // Gestão de bingo: busca compradores do bingo
           const data = await getCompradoresDetalhadosByBingoId(id);
           setCompradores(data);
           const info = await getBingoCartelasInfo(id);
           setCartelasInfo(info);
         } else if (user?.role === "proprietario") {
-          // Proprietário: busca compradores vinculados ao user.id
-          const { data: vendidos, error } = await supabase
-            .from("cartelas_vendidas")
-            .select(
-              "id, comprador_nome, comprador_telefone, pago, cartela_id, cartelas(numero)"
-            )
-            .eq("user_id", user.id);
-          if (error) throw error;
-          const compradoresList = (vendidos || []).map((v: any) => ({
-            id: v.id,
-            nome: v.comprador_nome,
-            telefone: v.comprador_telefone,
-            numero_cartela: v.cartelas?.numero,
-            pago: v.pago,
-          }));
-          setCompradores(compradoresList);
-          setCartelasInfo({
-            totalPermitidas: 0, // Não exibe helper global fora do contexto de bingo
-            cadastradas: compradoresList.length,
-            numerosCadastrados: compradoresList.map((c) => c.numero_cartela),
-          });
+          // Proprietário: busca o bingo do usuário
+          const { data: bingos, error: bingoError } = await supabase
+            .from("bingos")
+            .select("id")
+            .eq("responsavel_id", user.id)
+            .limit(1);
+          if (bingoError) throw bingoError;
+          const bingoId = bingos && bingos.length > 0 ? bingos[0].id : null;
+          setBingoIdState(bingoId); // armazena o id do bingo do proprietário
+          if (bingoId) {
+            const info = await getBingoCartelasInfo(bingoId);
+            setCartelasInfo(info);
+            // Busca compradores vinculados ao bingo do usuário
+            const data = await getCompradoresDetalhadosByBingoId(bingoId);
+            setCompradores(data);
+          } else {
+            setCartelasInfo({
+              totalPermitidas: 0,
+              cadastradas: 0,
+              numerosCadastrados: [],
+            });
+            setCompradores([]);
+          }
         }
       } catch (e) {
         setCompradores([]);
@@ -160,7 +164,7 @@ const Compradores = () => {
 
   // Função de submit (criar/editar)
   const onSubmit = async (data: CompradorForm) => {
-    if (!id) return;
+    if (!bingoIdState) return;
     const cartelaNumero = Number(data.numero_cartela);
     setLoading(true);
     try {
@@ -181,7 +185,7 @@ const Compradores = () => {
             comprador_telefone: data.telefone,
             pago: data.pago,
             cartela_id,
-            bingo_id: id,
+            bingo_id: bingoIdState,
           })
           .eq("id", editing.id);
         if (error) throw error;
@@ -192,16 +196,16 @@ const Compradores = () => {
           comprador_telefone: data.telefone,
           pago: data.pago,
           cartela_id,
-          bingo_id: id,
+          bingo_id: bingoIdState,
         });
         if (error) throw error;
       }
       // Atualiza lista após salvar
       const compradoresAtualizados = await getCompradoresDetalhadosByBingoId(
-        id
+        bingoIdState
       );
       setCompradores(compradoresAtualizados);
-      const info = await getBingoCartelasInfo(id);
+      const info = await getBingoCartelasInfo(bingoIdState);
       setCartelasInfo(info);
       closeModal();
     } catch (e: unknown) {
@@ -223,11 +227,11 @@ const Compradores = () => {
         .delete()
         .eq("id", compradorId);
       if (error) throw error;
-      // Atualiza lista após exclusão usando o id do bingo
-      if (id) {
-        const data = await getCompradoresDetalhadosByBingoId(id);
+      // Atualiza lista após exclusão usando o id do bingo correto
+      if (bingoIdState) {
+        const data = await getCompradoresDetalhadosByBingoId(bingoIdState);
         setCompradores(data);
-        const info = await getBingoCartelasInfo(id);
+        const info = await getBingoCartelasInfo(bingoIdState);
         setCartelasInfo(info);
       }
     } catch (e) {
@@ -365,7 +369,15 @@ const Compradores = () => {
               {...register("numero_cartela")}
             />
             <div className="text-xs text-gray-500 mb-1">
-              {`Cartelas cadastradas: ${cartelasInfo.cadastradas} / ${cartelasInfo.totalPermitidas}`}
+              {user?.role === "proprietario" ? (
+                <>
+                  {`Cartelas cadastradas: ${cartelasInfo.totalPermitidas}`}
+                  <br />
+                  {`Cartelas vendidas: ${cartelasInfo.cadastradas}`}
+                </>
+              ) : (
+                `Cartelas cadastradas: ${cartelasInfo.cadastradas} / ${cartelasInfo.totalPermitidas}`
+              )}
             </div>
             {errors.numero_cartela && (
               <span className="text-red-500 text-xs">
