@@ -13,7 +13,7 @@ import Cartelas from "./pages/Cartelas";
 import Conferencia from "./pages/Conferencia";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
-import Usuarios from "./pages/Users/index";
+import Usuarios from "./pages/Users";
 import PublicConferencia from "./pages/PublicConferencia";
 import BingoGestao from "./pages/Bingos/BingoGestao";
 import BingoGestaoConferencia from "./pages/Bingos/BingoGestaoConferencia";
