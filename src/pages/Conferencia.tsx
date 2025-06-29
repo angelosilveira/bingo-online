@@ -1,14 +1,18 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Layout from "@/components/layout/Layout";
 import SorteioBoard from "@/components/sorteio/SorteioBoard";
+import { getBingoCartelasInfo } from "@/services/cartelaHelperService";
+import { isCartelaVendida } from "@/services/conferenciaService";
+import { useParams } from "react-router-dom";
 
 const Conferencia = () => {
   const [bingoAtivo, setBingoAtivo] = useState(true);
   const [numerosSorteados, setNumerosSorteados] = useState<number[]>([]);
+  const [quantidadeVendidas, setQuantidadeVendidas] = useState<number>(0);
 
-  // Dados mockados para o ranking - simulando cartelas próximas de ganhar
+  // Dados mockados para  ranking - simulando cartelas próximas de ganhar
   const [ranking, setRanking] = useState([
     { cartela: 1, jogador: "João Silva", acertos: 12, posicao: 1 },
     { cartela: 15, jogador: "Maria Santos", acertos: 11, posicao: 2 },
@@ -16,6 +20,8 @@ const Conferencia = () => {
     { cartela: 23, jogador: "Ana Costa", acertos: 9, posicao: 4 },
     { cartela: 42, jogador: "Carlos Lima", acertos: 8, posicao: 5 },
   ]);
+
+  const { id: bingoId } = useParams<{ id: string }>();
 
   const handleSortearNumero = (numero: number) => {
     setNumerosSorteados((prev) => [...prev, numero]);
@@ -56,6 +62,25 @@ const Conferencia = () => {
   // Substitua pelo valor real do bingo ativo se necessário
   const quantidadeCartelas = 100;
 
+  // Buscar quantidade de cartelas vendidas ao montar
+  useEffect(() => {
+    if (!bingoId) return;
+    getBingoCartelasInfo(bingoId).then((info) => {
+      setQuantidadeVendidas(info.cadastradas);
+    });
+  }, [bingoId]);
+
+  // Exemplo de função de conferência de cartela
+  async function conferirCartela(numeroCartela: number) {
+    if (!bingoId) return alert("Bingo não encontrado!");
+    const vendida = await isCartelaVendida(bingoId, numeroCartela);
+    if (vendida) {
+      alert("Cartela válida! Conferência permitida.");
+    } else {
+      alert("Esta cartela não foi vendida e não pode ser conferida.");
+    }
+  }
+
   return (
     <div className="max-w-6xl mx-auto">
       <div className="mb-8">
@@ -75,6 +100,7 @@ const Conferencia = () => {
             onSortear={handleSortearNumero}
             disabled={!bingoAtivo}
             quantidadeCartelas={quantidadeCartelas}
+            quantidadeVendidas={quantidadeVendidas}
           />
         </div>
 
@@ -234,6 +260,45 @@ const Conferencia = () => {
                     Nenhum número sorteado ainda
                   </p>
                 )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Conferência de Cartela - Exemplo */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Conferência de Cartela</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <p className="text-gray-500 text-sm">
+                  Confira se o número da sua cartela está entre as cartelas
+                  vendidas. Isso é apenas um exemplo e deve ser adaptado
+                  conforme a lógica real de conferência.
+                </p>
+
+                {/* Exemplo de uso (adicione um campo de input e botão para testar) */}
+                <div className="my-6 flex gap-2 items-end">
+                  <input
+                    type="number"
+                    placeholder="Digite o número da cartela para conferir"
+                    className="border rounded px-2 py-1"
+                    id="input-conferir-cartela"
+                  />
+                  <Button
+                    onClick={async () => {
+                      const input = document.getElementById(
+                        "input-conferir-cartela"
+                      ) as HTMLInputElement;
+                      if (input && input.value) {
+                        await conferirCartela(Number(input.value));
+                      }
+                    }}
+                    className="bg-blue-600 text-white"
+                  >
+                    Conferir Cartela
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>

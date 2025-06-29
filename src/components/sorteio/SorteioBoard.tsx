@@ -28,6 +28,9 @@ const SorteioBoard = ({
   const [bingoIniciado, setBingoIniciado] = useState(false);
   const [showModal, setShowModal] = useState(false);
 
+  // AVISO visual após iniciar o bingo
+  const [showAviso, setShowAviso] = useState(false);
+
   const bingoColumns = {
     B: Array.from({ length: 15 }, (_, i) => i + 1),
     I: Array.from({ length: 15 }, (_, i) => i + 16),
@@ -72,6 +75,24 @@ const SorteioBoard = ({
           <CardTitle className="text-center">Controle de Sorteio</CardTitle>
         </CardHeader>
         <CardContent className="text-center space-y-4">
+          {/* AVISO visual após iniciar o bingo */}
+          {bingoIniciado && showAviso && (
+            <div className="bg-blue-100 border border-blue-300 text-blue-800 rounded p-3 mb-2 text-sm flex items-center justify-center gap-2">
+              <span>⚠️</span>
+              <span>
+                Apenas <b>cartelas vendidas</b> poderão ser conferidas neste
+                bingo!
+              </span>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setShowAviso(false)}
+              >
+                Fechar
+              </Button>
+            </div>
+          )}
+
           <div className="flex justify-around text-lg">
             <div>
               <div className="font-bold text-2xl text-blue-600">
@@ -158,6 +179,7 @@ const SorteioBoard = ({
                   onClick={() => {
                     setBingoIniciado(true);
                     setShowModal(false);
+                    setShowAviso(true); // Exibe aviso ao iniciar
                   }}
                   className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white"
                 >
