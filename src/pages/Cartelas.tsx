@@ -7,6 +7,16 @@ import CartelaGrid from "@/components/cartela/CartelaGrid";
 import { Plus, Search, Edit, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationPrevious,
+  PaginationNext,
+  PaginationEllipsis,
+} from "@/components/ui/pagination";
+import { useSearchParams, useNavigate } from "react-router-dom";
 
 const Cartelas = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -18,6 +28,8 @@ const Cartelas = () => {
   });
 
   const [cartelas, setCartelas] = useState<any[]>([]);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchCartelas();
@@ -45,6 +57,29 @@ const Cartelas = () => {
   const filteredCartelas = cartelas.filter((cartela) =>
     cartela.numero?.toString().includes(searchTerm)
   );
+
+  // Paginação
+  const initialPage = Number(searchParams.get("page")) || 1;
+  const [page, setPage] = useState(initialPage);
+  const pageSize = 30;
+  const totalPages = Math.max(1, Math.ceil(filteredCartelas.length / pageSize));
+  const paginatedCartelas = filteredCartelas.slice(
+    (page - 1) * pageSize,
+    page * pageSize
+  );
+
+  useEffect(() => {
+    setSearchParams((prev) => {
+      const params = new URLSearchParams(prev);
+      if (page > 1) {
+        params.set("page", String(page));
+      } else {
+        params.delete("page");
+      }
+      return params;
+    });
+    // eslint-disable-next-line
+  }, [page]);
 
   // Função utilitária para montar a cartela com símbolo B no centro
   function montarCartelaComSimbolo(numeros: number[]) {
@@ -169,6 +204,19 @@ const Cartelas = () => {
     }
   };
 
+  // Função utilitária para gerar range de páginas reduzido
+  function getPaginationRange(current: number, total: number, delta = 3) {
+    const range = [];
+    const left = Math.max(2, current - delta);
+    const right = Math.min(total - 1, current + delta);
+    for (let i = left; i <= right; i++) {
+      range.push(i);
+    }
+    if (left > 2) range.unshift("ellipsis-left");
+    if (right < total - 1) range.push("ellipsis-right");
+    return range;
+  }
+
   return (
     <>
       <div className="max-w-6xl mx-auto">
@@ -178,6 +226,9 @@ const Cartelas = () => {
             <p className="text-gray-600 mt-2">
               Gerencie as cartelas disponíveis para seus bingos
             </p>
+            <span className="text-sm text-gray-500 block mt-1">
+              Total cadastradas: <b>{cartelas.length}</b>
+            </span>
           </div>
           <Button
             onClick={() => setShowForm(true)}
@@ -266,42 +317,83 @@ const Cartelas = () => {
             </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredCartelas.map((cartela) => (
-              <Card
-                key={cartela.id}
-                className="hover:shadow-lg transition-shadow"
-              >
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <CardTitle>Cartela #{cartela.numero}</CardTitle>
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleEditCartela(cartela)}
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleDeleteCartela(cartela.id)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <CartelaGrid
-                    numeroCartela={cartela.numero}
-                    numeros={cartela.numeros}
-                    onChange={() => {}}
-                    readOnly={true}
-                  />
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {paginatedCartelas.map((cartela) => (
+                <Card
+                  key={cartela.id}
+                  className="hover:shadow-lg transition-shadow"
+                >
+                  <CardHeader className="flex flex-row items-center justify-between">
+                    <CardTitle>Cartela #{cartela.numero}</CardTitle>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleEditCartela(cartela)}
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleDeleteCartela(cartela.id)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <CartelaGrid
+                      numeroCartela={cartela.numero}
+                      numeros={cartela.numeros}
+                      onChange={() => {}}
+                      readOnly={true}
+                    />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+            <div className="flex flex-col items-center gap-4 mt-10 mb-10">
+              {totalPages > 1 && (
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious
+                        onClick={() => setPage((p) => Math.max(1, p - 1))}
+                        href="#"
+                      />
+                    </PaginationItem>
+                    {getPaginationRange(page, totalPages, 3).map((p, i) =>
+                      p === "ellipsis-left" || p === "ellipsis-right" ? (
+                        <PaginationItem key={p + i}>
+                          <PaginationEllipsis />
+                        </PaginationItem>
+                      ) : (
+                        <PaginationItem key={p}>
+                          <PaginationLink
+                            isActive={page === p}
+                            onClick={() => setPage(Number(p))}
+                            href="#"
+                          >
+                            {p}
+                          </PaginationLink>
+                        </PaginationItem>
+                      )
+                    )}
+                    <PaginationItem>
+                      <PaginationNext
+                        onClick={() =>
+                          setPage((p) => Math.min(totalPages, p + 1))
+                        }
+                        href="#"
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              )}
+            </div>
+          </>
         )}
       </div>
     </>
